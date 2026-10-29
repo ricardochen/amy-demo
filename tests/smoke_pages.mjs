@@ -120,6 +120,38 @@ check('/query in English retrieves divorce context',
   (q.body.context_sources || []).some((s) => /divorce|divorcio/i.test(s)),
   (q.body.context_sources || [])[0] || '');
 
+// 7b. Verbosity guard: a voice kiosk must stay short and ask to go deeper.
+// Regression guard — the first version of Amy answered 66-100 words per turn,
+// which is ~40 seconds of speech and drowns the visitor.
+const brief = await page.evaluate(async (B) => {
+  const qs = [
+    'What services do you offer?',
+    'What payment methods do you accept?',
+    'How do I get residency in Panama?',
+  ];
+  const out = [];
+  for (const question of qs) {
+    const r = await fetch(B + '/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, language: 'en' }),
+    });
+    const d = await r.json();
+    out.push({
+      question,
+      words: (d.answer || '').split(/\s+/).filter(Boolean).length,
+      asksBack: (d.answer || '').includes('?'),
+    });
+  }
+  return out;
+}, BACKEND);
+const longest = Math.max(...brief.map((b) => b.words));
+check('Answers stay short (<=45 words)', longest <= 45,
+  brief.map((b) => `${b.words}w`).join(', '));
+check('Most answers end with a question to go deeper',
+  brief.filter((b) => b.asksBack).length >= 2,
+  brief.map((b) => (b.asksBack ? 'asks' : 'no-question')).join(', '));
+
 // 8. TTS real: audio reproducible
 const tts = await page.evaluate(async (B) => {
   const r = await fetch(B + '/tts', {
