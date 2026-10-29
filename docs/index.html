@@ -1210,8 +1210,8 @@
   </div>
 </div>
 <script>
-// Backend serverless: Supabase Edge Function (Deno). Este frontend vive en
-// GitHub Pages (estático), así que apunta al edge desplegado.
+// Serverless backend: Supabase Edge Function (Deno). This frontend is served
+// from GitHub Pages (static), so it points at the deployed edge function.
 window.AMY_BACKEND_URL = "https://xwvaegliifpggqlmxxhu.supabase.co/functions/v1/amy-api";
 const BACKEND_URL = window.AMY_BACKEND_URL || '';
 // English-only demo: the kiosk never switches language.
@@ -2121,8 +2121,8 @@ function idleExpire() {
 
 preloadGreetingAudio();
 
-// ---- Kiosko fit: escala el lienzo de diseño 460x820 para LLENAR la pantalla ----
-// Option B: mantiene el diseno exacto del mockup, sin deformar, sin bandas laterales.
+// ---- Kiosk fit: scale the 460x820 design canvas to FILL the screen ----
+// Option B: preserves the exact mockup layout — no distortion, no side bars.
 (function fitScreen(){
   var stage = document.getElementById('stage');
   var screen = document.getElementById('screen');
@@ -2130,8 +2130,8 @@ preloadGreetingAudio();
   function apply(){
     if(!stage || !screen) return;
     var vw = window.innerWidth, vh = window.innerHeight;
-    // ?fit=cover (default) escala para cubrir toda la pantalla (recorta un poco si la
-    // relacion difiere); ?fit=contain encaja sin recortar (puede dejar bandas minimas).
+    // ?fit=cover (default) scales to cover the whole screen (crops slightly if the
+    // aspect ratio differs); ?fit=contain fits without cropping (may leave thin bars).
     var mode = (new URLSearchParams(location.search).get('fit') || 'cover');
     var s = (mode === 'contain')
       ? Math.min(vw / DW, vh / DH)
