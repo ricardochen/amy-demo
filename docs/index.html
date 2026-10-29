@@ -1098,25 +1098,21 @@
 
       <div class="sleep-invite">
         <div class="sleep-invite-en" id="sleepReveal"></div>
-        <div class="sleep-invite-es" id="sleepRevealEs">Entra, Hablemos.</div>
       </div>
 
       <div class="sleep-rotator" id="sleepRotator">
         <div class="sleep-msg active" data-idx="0">
           <div class="sleep-msg-en">Your Legal Ally.</div>
-          <div class="sleep-msg-es">Tu Aliado Legal.</div>
         </div>
         <div class="sleep-msg" data-idx="1">
           <div class="sleep-msg-en">Ask Me About Panama Law.</div>
-          <div class="sleep-msg-es">Pregúntame sobre Derecho Panameño.</div>
         </div>
         <div class="sleep-msg" data-idx="2">
           <div class="sleep-msg-en">Panama Law · Instant Access.</div>
-          <div class="sleep-msg-es">Derecho Panameño · Acceso Instantáneo.</div>
         </div>
       </div>
 
-      <div class="sleep-tap">Toca para empezar <span class="tap-arrow"></span></div>
+      <div class="sleep-tap">Tap to start <span class="tap-arrow"></span></div>
 
       <div class="sleep-dots" id="sleepDots">
         <div class="sleep-dot active"></div>
@@ -1126,7 +1122,7 @@
 
       <div class="wake-btn"><button onclick="switchState('wake')">LET'S TALK</button></div>
     </div>
-    <div class="sleep-foot"><span class="accent">18+ años</span> · Asesoría legal en Panamá</div>
+    <div class="sleep-foot"><span class="accent">18+ years</span> · Legal counsel in Panama</div>
   </div>
 
   <div class="state" id="wake">
@@ -1142,7 +1138,7 @@
     </div>
 
     <div class="wake-crest">
-      <div class="crest-mark">Tu Aliado Legal en Panamá</div>
+      <div class="crest-mark">Your Legal Partner in Panama</div>
       <div class="crest-sub">Trusted counsel · 18+ years</div>
     </div>
 
@@ -1167,9 +1163,9 @@
       <div id="transcriptContainer"></div>
     </div>
 
-    <button class="lang-btn" id="langToggle">Español</button>
+    <!-- Language toggle removed: this demo is English-only. -->
     <div class="wake-statusbar">
-      <div class="value-line">Asesoría legal premium en Panamá · <span class="accent">18+ años</span></div>
+      <div class="value-line">Premium legal counsel in Panama · <span class="accent">18+ years</span></div>
       <span>● System ready · Voice activated</span>
     </div>
   </div>
@@ -1218,6 +1214,7 @@
 // GitHub Pages (estático), así que apunta al edge desplegado.
 window.AMY_BACKEND_URL = "https://xwvaegliifpggqlmxxhu.supabase.co/functions/v1/amy-api";
 const BACKEND_URL = window.AMY_BACKEND_URL || '';
+// English-only demo: the kiosk never switches language.
 let currentLang = 'en';
 let textInputVisible = false;
 let conversationHistory = [];
@@ -1253,7 +1250,6 @@ function preloadGreetingAudio() {
   if (greetingPreloading) return;
   greetingPreloading = true;
   const texts = [
-    {text: greetingES, lang: 'es', key: 'greeting_es'},
     {text: greetingEN, lang: 'en', key: 'greeting_en'},
   ];
   Promise.all(texts.map(function(item) {
@@ -1321,7 +1317,7 @@ function speak(text, lang, onplay, onend) {
   }
 
   // Check cache first (for greeting)
-  const cacheKey = text === greetingES ? 'greeting_es' : text === greetingEN ? 'greeting_en' : null;
+  const cacheKey = text === greetingEN ? 'greeting_en' : null;
   if (cacheKey && audioCache[cacheKey]) {
     playUrl(audioCache[cacheKey]);
     return;
@@ -1385,16 +1381,13 @@ function buildRevealText(text) {
 
 function playReveal() {
   var el = document.getElementById('sleepReveal');
-  var esEl = document.getElementById('sleepRevealEs');
   if (!el) return;
   el.className = 'sleep-invite-en';
   el.innerHTML = buildRevealText("Come In, Let's Talk.");
-  esEl.classList.remove('visible');
 
   var revealTime = "Come In, Let's Talk.".length * 0.045 * 1000 + 600;
   setTimeout(function() {
     el.classList.add('revealed');
-    esEl.classList.add('visible');
     // Wavy dance — staggered sin wave on each char
     el.classList.add('wave');
     var chars = el.querySelectorAll('.char');
@@ -1485,7 +1478,7 @@ function switchState(id) {
   if (id === 'goodbye') hideTextInput();
 }
 
-const greetingES = 'Hola, soy Amy. Bienvenido a Kraemer & Kraemer. Somos un bufete de abogados en Panama con mas de 18 anos de experiencia. En que puedo ayudarte hoy?';
+// English-only demo.
 const greetingEN = 'Hi, I\'m Amy. Welcome to Kraemer & Kraemer. We are a law firm in Panama with over 18 years of experience. How can I help you today?';
 
 let typingTimer = null;
@@ -1501,7 +1494,7 @@ function startTyping(playVoice) {
   typingCancelled = false;
   const el = document.getElementById('greeting-text');
   el.innerHTML = '';
-  const text = currentLang === 'es' ? greetingES : greetingEN;
+  const text = greetingEN;
   const chars = text.split(''); let i = 0;
 
   // Speak the greeting voice and start mic when TTS finishes
@@ -1532,22 +1525,15 @@ function startTyping(playVoice) {
   type();
 }
 
-document.getElementById('langToggle').addEventListener('click', () => {
-  currentLang = currentLang === 'es' ? 'en' : 'es';
-  document.getElementById('langToggle').textContent = currentLang === 'es' ? 'English' : 'Espanol';
-  stopAudio();
-  startTyping(true);
-});
-
 document.querySelectorAll('.card').forEach(card => {
   card.addEventListener('click', () => {
     const svc = card.dataset.service;
     const qs = {
-      corp: currentLang === 'es' ? 'Como constituyo una empresa en Panama?' : 'How do I incorporate in Panama?',
-      offshore: currentLang === 'es' ? 'Que servicios offshore ofrecen?' : 'What offshore services do you offer?',
-      realestate: currentLang === 'es' ? 'Como compro propiedades en Panama?' : 'How to buy property in Panama?',
-      residency: currentLang === 'es' ? 'Como obtengo residencia en Panama?' : 'How to get residency in Panama?',
-      crypto: currentLang === 'es' ? 'Que servicios de crypto ofrecen?' : 'What crypto services do you offer?',
+      corp: 'How do I incorporate in Panama?',
+      offshore: 'What offshore services do you offer?',
+      realestate: 'How to buy property in Panama?',
+      residency: 'How to get residency in Panama?',
+      crypto: 'What crypto services do you offer?',
     };
     askQuestion(qs[svc] || qs.residency);
   });
@@ -1560,7 +1546,7 @@ function addChatMessage(role, text) {
   bubble.className = 'chat-bubble ' + (role === 'user' ? 'visitor' : 'robot');
   const label = document.createElement('div');
   label.className = 'label';
-  label.textContent = role === 'user' ? (currentLang === 'es' ? 'Tú' : 'You') : 'Amy';
+  label.textContent = role === 'user' ? 'You' : 'Amy';
   const textEl = document.createElement('div');
   textEl.className = 'text';
   textEl.textContent = text;
@@ -1685,7 +1671,7 @@ function askQuestion(q) {
     setTimeout(startTypingEffect, 100);
   })
   .catch(() => {
-    addChatMessage('assistant', currentLang === 'es' ? 'Error de conexion.' : 'Connection error.');
+    addChatMessage('assistant', 'Connection error.');
     switchState('speaking');
   });
 }
@@ -1771,10 +1757,10 @@ function __nativeEnsureInterimBubble() {
   bubble.className = 'chat-bubble visitor interim';
   const lbl = document.createElement('div');
   lbl.className = 'label';
-  lbl.textContent = currentLang === 'es' ? 'Tú' : 'You';
+  lbl.textContent = 'You';
   const textEl = document.createElement('div');
   textEl.className = 'text trans-interim-live';
-  textEl.textContent = currentLang === 'es' ? 'Escuchando...' : 'Listening...';
+  textEl.textContent = 'Listening...';
   bubble.appendChild(lbl);
   bubble.appendChild(textEl);
   container.appendChild(bubble);
@@ -1816,7 +1802,7 @@ window.__amySttOnResult = function(res) {
     const textEl = __nativeInterimBubble.querySelector('.text');
     if (textEl) {
       const displayText = __nativeFinalTranscript + (res.isFinal ? '' : text);
-      textEl.textContent = displayText || (currentLang === 'es' ? 'Escuchando...' : 'Listening...');
+      textEl.textContent = displayText || 'Listening...';
       const c = document.getElementById('chatMessages');
       if (c) c.scrollTop = c.scrollHeight;
     }
@@ -1851,7 +1837,7 @@ window.__amySttOnError = function(err) {
       window.__nativeReArmCount = (window.__nativeReArmCount || 0) + 1;
       setTimeout(function() {
         if (!micActive) return;
-        try { window.AmyBridge.startListening(currentLang === 'es' ? 'es-PA' : 'en-US'); } catch(e) {}
+        try { window.AmyBridge.startListening('en-US'); } catch(e) {}
       }, 300);
     }
     return;
@@ -1864,7 +1850,7 @@ window.__amySttOnError = function(err) {
       __nativeFinalTranscript = '';
       setTimeout(function() {
         if (!micActive) return;
-        try { window.AmyBridge.startListening(currentLang === 'es' ? 'es-PA' : 'en-US'); } catch(e) {}
+        try { window.AmyBridge.startListening('en-US'); } catch(e) {}
       }, 400);
       return;
     }
@@ -1899,7 +1885,7 @@ function startNativeStt() {
   __nativeEnsureInterimBubble();
 
   try {
-    window.AmyBridge.startListening(currentLang === 'es' ? 'es-PA' : 'en-US');
+    window.AmyBridge.startListening('en-US');
   } catch(e) {
     console.log('[kiosk] startListening bridge failed', e);
     stopMic();
@@ -1922,7 +1908,7 @@ function startSR() {
   }
   if (label) label.textContent = '';
 
-  micRecognition.lang = currentLang === 'es' ? 'es-PA' : 'en-US';
+  micRecognition.lang = 'en-US';
   micRecognition.continuous = true;
   micRecognition.interimResults = true;
 
@@ -1938,10 +1924,10 @@ function startSR() {
     interimBubble.className = 'chat-bubble visitor interim';
     const lbl = document.createElement('div');
     lbl.className = 'label';
-    lbl.textContent = currentLang === 'es' ? 'Tú' : 'You';
+    lbl.textContent = 'You';
     const textEl = document.createElement('div');
     textEl.className = 'text trans-interim-live';
-    textEl.textContent = currentLang === 'es' ? 'Escuchando...' : 'Listening...';
+    textEl.textContent = 'Listening...';
     interimBubble.appendChild(lbl);
     interimBubble.appendChild(textEl);
     container.appendChild(interimBubble);
@@ -1966,7 +1952,7 @@ function startSR() {
       const textEl = interimBubble.querySelector('.text');
       if (textEl) {
         const displayText = finalTranscript + interim;
-        textEl.textContent = displayText || (currentLang === 'es' ? 'Escuchando...' : 'Listening...');
+        textEl.textContent = displayText || 'Listening...';
         const c = document.getElementById('chatMessages');
         if (c) c.scrollTop = c.scrollHeight;
       }
@@ -1994,7 +1980,7 @@ function showTextInput() {
   if (el) el.style.display = 'flex';
   switchState('speaking');
   var vt = document.getElementById('visitorText');
-  if (vt) vt.textContent = currentLang === 'es' ? 'Escribe tu pregunta:' : 'Type your question:';
+  if (vt) vt.textContent = 'Type your question:';
   var vb = document.getElementById('visitorBubble');
   if (vb) vb.style.display = 'block';
   const input = document.getElementById('textInputField');

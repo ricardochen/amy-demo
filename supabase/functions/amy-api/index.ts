@@ -122,30 +122,30 @@ function bm25(query: string, k = TOP_K): Array<[number, number]> {
 }
 
 // ── System prompt (idéntico al original) ──────────────────────
-const SYSTEM_PROMPT = `Eres Amy, un asistente virtual del showroom de Kraemer & Kraemer, un bufete de abogados en Panamá. Tu nombre es Amy, NO Atlas.
+const SYSTEM_PROMPT = `You are Amy, a virtual assistant for the Kraemer & Kraemer showroom, a law firm in Panama. Your name is Amy, NOT Atlas.
 
-Tu personalidad es amable, profesional y entusiasta. Representas a una firma legal premium con 18 años de experiencia.
+You are always English-first. This deployment is an English-only demo: answer in English even if the visitor writes in another language. Keep the door open for Spanish-speaking visitors by noting, in one short sentence, that a Spanish-speaking advisor is available if they prefer.
 
-IMPORTANTE: No te presentes ni digas tu nombre a menos que te lo pregunten directamente. El saludo inicial ya ocurrió en la pantalla. Ve directo al grano.
+Your personality is warm, professional and enthusiastic. You represent a premium legal firm with 18 years of experience.
 
-Debes responder SOLO basado en el contexto proporcionado (preguntas y respuestas del knowledge base).
-Si la respuesta no está en el contexto, di cortésmente que no tienes esa información y ofrece conectar con un asesor humano.
+IMPORTANT: Do not introduce yourself or state your name unless asked directly. The opening greeting already happened on screen. Get to the point.
 
-Reglas:
-- Responde en el MISMO IDIOMA de la pregunta (español o inglés).
-- Respuestas concisas (máximo 3 párrafos). Si el visitante quiere más detalle, puede preguntar de nuevo.
-- Usa un tono conversacional, no corporativo robótico.
-- Menciona el nombre de la firma cuando sea natural hacerlo.
-- Si no sabes la respuesta exacta: "No tengo esa información en este momento, pero puedo conectarle con un asesor de Kraemer & Kraemer."
+You must answer ONLY based on the context provided (question and answer pairs from the knowledge base).
+If the answer is not in the context, politely say you do not have that information and offer to connect the visitor with a human advisor.
 
-DESPEDIDA (MUY IMPORTANTE): Si el visitante se despide o señala que ya terminó ("adiós", "hasta luego", "nos vemos", "chao", "bye", "goodbye", "see you", "that's all", "eso es todo", "gracias, eso es todo", etc.), responde con UNA sola frase corta de despedida en el idioma correspondiente, de forma cálida y profesional, y termina SIEMPRE tu respuesta con el marcador exacto "<<BYE>>" (sin nada después). No hagas preguntas de seguimiento ni ofrezcas más ayuda cuando te despides.
-Ejemplo ES: "¡Gracias por visitar Kraemer & Kraemer! Ha sido un gusto ayudarle. <<BYE>>"
-Ejemplo EN: "Thank you for visiting Kraemer & Kraemer! It was a pleasure to help. <<BYE>>"
+Rules:
+- ALWAYS respond in English.
+- Keep answers concise (max 3 paragraphs). If the visitor wants more detail, they can ask again.
+- Use a conversational tone, not robotic corporate speak.
+- Mention the firm name when it is natural to do so.
+- If you do not know the exact answer: "I don't have that information right now, but I can connect you with a Kraemer & Kraemer advisor."
 
-CONTACTO HUMANO: Cuando el visitante pida hablar con una persona, agente, asesor humano, abogado, o contactarse con alguien, responde EXACTAMENTE lo siguiente según el idioma:
-- Si la pregunta está en español: "Puede pasar al kiosko de atención, allí se le conectará por videollamada con un asesor de Kraemer & Kraemer que podrá atenderlo personalmente."
-- Si la pregunta está en inglés: "You can go to the service kiosk, where you will be connected by video call with a Kraemer & Kraemer advisor who can assist you personally."
-Sin agregar nada más ni ofrecer alternativas.`;
+FAREWELL (VERY IMPORTANT): If the visitor says goodbye or signals they are done ("bye", "goodbye", "see you", "that's all", "thanks, that's it", "adiós", "hasta luego", etc.), respond with ONE short, warm, professional farewell sentence and ALWAYS end your answer with the exact marker "<<BYE>>" (nothing after it). Do not ask follow-up questions or offer further help when saying goodbye.
+Example: "Thank you for visiting Kraemer & Kraemer! It was a pleasure to help. <<BYE>>"
+
+HUMAN CONTACT: When the visitor asks to speak with a person, agent, human advisor or lawyer, respond EXACTLY:
+"You can go to the service kiosk, where you will be connected by video call with a Kraemer & Kraemer advisor who can assist you personally."
+Add nothing else and do not offer alternatives.`;
 
 interface Msg {
   role: string;
@@ -156,36 +156,35 @@ function buildPrompt(
   question: string,
   contexts: Array<{ question: string; answer: string }>,
   history: Msg[] = [],
-  language = "en",
+  _language = "en",
 ): Msg[] {
+  // English-only deployment: the language argument is accepted for backward
+  // compatibility but the response is always forced to English.
   const contextText = contexts.map((c) => `Q: ${c.question}\nA: ${c.answer}`).join("\n\n");
-  const langName = language === "es" ? "ESPAÑOL" : "ENGLISH";
-  const langInstr = `IMPORTANTE: Debes responder en ${langName}. La respuesta debe estar completamente en ${
-    language === "es" ? "español" : "english"
-  }, sin mezclar idiomas.`;
+  const langInstr =
+    "IMPORTANT: Respond in ENGLISH. The entire answer must be in English, regardless of the language the visitor used.";
   const byeReminder =
-    "RECORDATORIO CRÍTICO: Si el mensaje del visitante es una DESPEDIDA o indica que ya terminó " +
-    "(adiós, hasta luego, nos vemos, chao, bye, goodbye, see you, that's all, eso es todo, etc.), " +
-    "responde con UNA sola frase corta de despedida y agrega EXACTAMENTE el marcador <<BYE>> al final. " +
-    "En cualquier otro caso NO incluyas <<BYE>>.";
+    "CRITICAL REMINDER: If the visitor's message is a FAREWELL or signals they are done " +
+    "(bye, goodbye, see you, that's all, thanks that's it, etc.), respond with ONE short farewell " +
+    "sentence and append EXACTLY the marker <<BYE>> at the end. Otherwise do NOT include <<BYE>>.";
 
   const messages: Msg[] = [
     { role: "system", content: SYSTEM_PROMPT },
     {
       role: "user",
-      content: `${langInstr}\n\nContexto relevante del knowledge base:\n\n${contextText}\n\n---`,
+      content: `${langInstr}\n\nRelevant knowledge base context:\n\n${contextText}\n\n---`,
     },
   ];
   for (const h of history.slice(-6)) {
     messages.push({ role: h.role === "assistant" ? "assistant" : "user", content: h.content });
   }
-  messages.push({ role: "user", content: `${byeReminder}\n\nPregunta del visitante: ${question}` });
+  messages.push({ role: "user", content: `${byeReminder}\n\nVisitor question: ${question}` });
   return messages;
 }
 
 async function queryDeepseek(messages: Msg[]): Promise<string> {
   if (!DEEPSEEK_API_KEY) {
-    return "Esta es una respuesta de demostración. Configura DEEPSEEK_API_KEY para respuestas reales basadas en el knowledge base de Kraemer & Kraemer.";
+    return "This is a demo response. Set DEEPSEEK_API_KEY for real answers based on the Kraemer & Kraemer knowledge base.";
   }
   const resp = await fetch(DEEPSEEK_URL, {
     method: "POST",
@@ -255,7 +254,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === "POST" && path === "/query") {
     if (!rateOk(ip)) {
       return json(
-        { detail: `Límite de ${RATE_LIMIT_PER_HOUR} consultas por hora alcanzado. Escríbenos directamente.` },
+        { detail: `Rate limit reached: ${RATE_LIMIT_PER_HOUR} queries per hour. Please contact us directly.` },
         429,
       );
     }
@@ -263,12 +262,12 @@ Deno.serve(async (req: Request) => {
     try {
       body = await req.json();
     } catch {
-      return json({ detail: "JSON inválido" }, 400);
+      return json({ detail: "Invalid JSON" }, 400);
     }
     const question = String(body.question ?? "").trim().slice(0, 2000);
-    const language = body.language === "en" ? "en" : "es";
+    const language = "en";
     const history = Array.isArray(body.history) ? (body.history as Msg[]) : [];
-    if (!question) return json({ detail: "question requerida" }, 400);
+    if (!question) return json({ detail: "question is required" }, 400);
 
     try {
       const ranked = bm25(question);
@@ -291,13 +290,13 @@ Deno.serve(async (req: Request) => {
     try {
       body = await req.json();
     } catch {
-      return json({ detail: "JSON inválido" }, 400);
+      return json({ detail: "Invalid JSON" }, 400);
     }
     const text = String(body.text ?? "").trim().slice(0, 5000);
-    const language = body.language === "en" ? "en" : "es";
-    if (!text) return json({ detail: "text requerido" }, 400);
+    const language = "en";
+    if (!text) return json({ detail: "text is required" }, 400);
 
-    const voiceId = language === "es" ? TTS_VOICE_ES : TTS_VOICE_EN;
+    const voiceId = TTS_VOICE_EN;
     try {
       const resp = await fetch(ELEVENLABS_TTS_URL(voiceId), {
         method: "POST",

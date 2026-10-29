@@ -31,15 +31,15 @@ page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 await page.goto(URL, { waitUntil: 'networkidle', timeout: 60000 });
 
 // 1. Carga
-check('Página carga (title contiene Amy)', (await page.title()).includes('Amy'), await page.title());
+check('Page loads (title contains Amy)', (await page.title()).includes('Amy'), await page.title());
 
 // 2. Kiosco visible
 const wake = await page.locator('#wake').count();
-check('Pantalla de reposo (#wake) existe', wake > 0);
+check('Kiosk root (#wake) exists', wake > 0);
 
 // 3. Backend URL inyectada correctamente
 const backendUrl = await page.evaluate(() => window.AMY_BACKEND_URL || null);
-check('AMY_BACKEND_URL apunta al edge', backendUrl === BACKEND, backendUrl);
+check('AMY_BACKEND_URL points at the edge', backendUrl === BACKEND, backendUrl);
 
 // 4. Las imágenes de fondo cargan (404 daría un kiosco negro)
 // OJO: las urls viven en un <style> inline y son RELATIVAS, así que hay que
@@ -60,18 +60,36 @@ const imgOk = await page.evaluate(async () => {
   );
   return { total: abs.length, bad: results.filter((r) => !r.ok || !r.type.startsWith('image')) };
 });
-check(`Imágenes de fondo cargan (${imgOk.total} revisadas)`, imgOk.total > 0 && imgOk.bad.length === 0,
-  imgOk.total === 0 ? 'TEST CIEGO: no se encontró ninguna imagen' : (imgOk.bad.length ? JSON.stringify(imgOk.bad) : ''));
+check(`Background images load (${imgOk.total} checked)`, imgOk.total > 0 && imgOk.bad.length === 0,
+  imgOk.total === 0 ? 'BLIND TEST: no images found' : (imgOk.bad.length ? JSON.stringify(imgOk.bad) : ''));
 
 // 5. Backend real: /health
 const health = await page.evaluate(async (B) => {
   const r = await fetch(B + '/health');
   return { status: r.status, body: await r.json() };
 }, BACKEND);
-check('/health 200 y kb_size > 0', health.status === 200 && health.body.kb_size > 0,
+check('/health 200 and kb_size > 0', health.status === 200 && health.body.kb_size > 0,
   `kb_size=${health.body.kb_size}`);
 
-// 6. Backend real: /query en español (el caso que estaba roto)
+// 6. English-only: no language toggle, no Spanish text visible
+const langBtn = await page.locator('#langToggle').count();
+check('No language toggle present (English-only)', langBtn === 0, `${langBtn} found`);
+
+const spanishText = await page.evaluate(() => {
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const hits = [];
+  while (walker.nextNode()) {
+    const t = walker.currentNode.textContent.trim();
+    if (/[áéíóúñ¿¡]/i.test(t) || /\b(años|Asesoría|Español|Gracias|Bienvenido|Toca para)\b/i.test(t)) {
+      hits.push(t.slice(0, 60));
+    }
+  }
+  return hits;
+});
+check('No Spanish text rendered on screen', spanishText.length === 0,
+  spanishText.slice(0, 3).join(' | '));
+
+// 7. Backend real: /query answers in English even for a Spanish question
 const q = await page.evaluate(async (B) => {
   const r = await fetch(B + '/query', {
     method: 'POST',
@@ -80,13 +98,16 @@ const q = await page.evaluate(async (B) => {
   });
   return { status: r.status, body: await r.json() };
 }, BACKEND);
-check('/query responde 200', q.status === 200, `HTTP ${q.status}`);
-check('/query devuelve respuesta no vacía', (q.body.answer || '').length > 40);
-check('/query en español recupera contexto de divorcio',
+check('/query responds 200', q.status === 200, `HTTP ${q.status}`);
+check('/query returns a non-empty answer', (q.body.answer || '').length > 40);
+check('/query force-answers in English for a Spanish question',
+  q.body.language === 'en' && !/\b(el proceso|la respuesta|no tengo esa información)\b/i.test(q.body.answer || ''),
+  `language=${q.body.language}`);
+check('/query in English retrieves divorce context',
   (q.body.context_sources || []).some((s) => /divorce|divorcio/i.test(s)),
   (q.body.context_sources || [])[0] || '');
 
-// 7. TTS real: audio reproducible
+// 8. TTS real: audio reproducible
 const tts = await page.evaluate(async (B) => {
   const r = await fetch(B + '/tts', {
     method: 'POST',
@@ -96,15 +117,15 @@ const tts = await page.evaluate(async (B) => {
   const blob = await r.blob();
   return { status: r.status, type: r.headers.get('content-type'), size: blob.size };
 }, BACKEND);
-check('/tts devuelve audio/mpeg', tts.status === 200 && tts.type === 'audio/mpeg',
+check('/tts returns audio/mpeg', tts.status === 200 && tts.type === 'audio/mpeg',
   `${tts.size} bytes`);
 
-// 8. La UI de voz existe (micrófono presente)
+// 9. La UI de voz existe (micrófono presente)
 const mic = await page.locator('#micButton').count();
-check('Botón de micrófono presente', mic > 0);
+check('Microphone button present', mic > 0);
 
-// 9. Sin errores de consola
-check('Sin errores de consola', errors.length === 0, errors.slice(0, 5).join(' | '));
+// 10. Sin errores de consola
+check('No console errors', errors.length === 0, errors.slice(0, 5).join(' | '));
 
 await page.screenshot({ path: '/tmp/amy_pages.png', fullPage: false });
 console.log('\nScreenshot: /tmp/amy_pages.png');

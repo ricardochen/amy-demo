@@ -1,6 +1,6 @@
-// Flujo conversacional REAL en la UI de Amy: tocar el kiosco, escribir una
-// pregunta en español y confirmar que la respuesta de DeepSeek aparece en
-// pantalla (no solo que el endpoint responda).
+// Real conversational flow in the Amy UI: tap the kiosk, type a
+// question and confirm the DeepSeek answer is rendered on
+// screen (not just that the endpoint responds).
 import { chromium } from 'playwright';
 
 const URL = 'https://ricardochen.github.io/amy-demo/';
@@ -19,59 +19,59 @@ page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 
 await page.goto(URL, { waitUntil: 'networkidle', timeout: 60000 });
 
-// El kiosco arranca en la pantalla de atracción (#sleep, con el botón LET'S TALK).
-// El flujo real es: LET'S TALK → #wake (saludo) → conversación (#speaking).
+// The kiosk starts on the attract screen (#sleep, with the LET'S TALK button).
+// Real flow: LET'S TALK -> #wake (greeting) -> conversation (#speaking).
 const startsOnSleep = await page.evaluate(() =>
   document.getElementById('sleep')?.classList.contains('active') ?? false);
-check('Arranca en pantalla de atracción (#sleep)', startsOnSleep);
+check('Starts on the attract screen (#sleep)', startsOnSleep);
 
 await page.locator('.wake-btn button').click();
 await page.waitForTimeout(1500);
 const onWake = await page.evaluate(() =>
   document.getElementById('wake')?.classList.contains('active') ?? false);
-check("LET'S TALK entra a la pantalla de saludo (#wake)", onWake);
+check("LET'S TALK opens the greeting screen (#wake)", onWake);
 
-// Un toque más lleva a la conversación.
+// One more tap moves into the conversation.
 await page.locator('#wake').click({ force: true });
 await page.waitForTimeout(2500);
 
 const speakingActive = await page.evaluate(() =>
   document.getElementById('speaking')?.classList.contains('active') ?? false);
-check('El toque entra a la pantalla de conversación', speakingActive);
+check('Tap opens the conversation screen', speakingActive);
 
-// El input de texto está oculto por defecto; se muestra con el botón de teclado.
+// The text input is hidden by default; reveal it programmatically.
 const shown = await page.evaluate(() => {
   const el = document.getElementById('textInputOverlay');
   if (!el) return false;
   el.style.display = 'block';
   return true;
 });
-check('Overlay de texto disponible', shown);
+check('Text input overlay available', shown);
 
-// Preguntar lo mismo que en el smoke de API, pero por la UI.
-const QUESTION = '¿Qué es el proceso de divorcio?';
+// Ask through the UI, not just the API.
+const QUESTION = 'What is the divorce process in Panama?';
 await page.fill('#textInputField', QUESTION);
 await page.evaluate(() => document.getElementById('textInputField')
   .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })));
 
-// Esperar la respuesta del backend (DeepSeek tarda unos segundos).
+// Wait for the backend answer (DeepSeek takes a few seconds).
 let answered = false;
 for (let i = 0; i < 40; i++) {
   await page.waitForTimeout(1000);
   const bubbles = await page.evaluate(() =>
     [...document.querySelectorAll('#chatMessages .chat-bubble')].map((b) => b.innerText.trim()));
   const last = bubbles[bubbles.length - 1] || '';
-  if (last.length > 60 && /divorcio|divorce|mutuo|contencioso/i.test(last)) { answered = true; break; }
+  if (last.length > 60 && /divorce|mutual consent|contentious/i.test(last)) { answered = true; break; }
 }
 
 const finalBubbles = await page.evaluate(() =>
   [...document.querySelectorAll('#chatMessages .chat-bubble')].map((b) => b.innerText.trim()));
-check('La pregunta del visitante aparece en el chat',
-  finalBubbles.some((b) => b.includes('divorcio')));
-check('La respuesta de DeepSeek aparece en pantalla', answered,
+check('Visitor question appears in the chat',
+  finalBubbles.some((b) => /divorce/i.test(b)));
+check('DeepSeek answer appears on screen', answered,
   (finalBubbles[finalBubbles.length - 1] || '').slice(0, 120));
 
-check('Sin errores de consola en el flujo', errors.length === 0, errors.slice(0, 3).join(' | '));
+check('No console errors during the flow', errors.length === 0, errors.slice(0, 3).join(' | '));
 
 await page.screenshot({ path: '/tmp/amy_chat.png' });
 console.log(`\n=== ${failures === 0 ? 'TODO OK' : failures + ' FALLOS'} ===`);

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-build_kb.py — Regenera el knowledge base JSON desde el Excel original.
+build_kb.py — Rebuild the knowledge base JSON from the original Excel file.
 
-El backend indexa `kb_data.json` (no el Excel): así el edge function carga los
-datos embebidos sin necesitar `pandas` ni sistema de archivos.
+The backend indexes `kb_data.json` (not the Excel file), so the edge function
+can load embedded data without needing `pandas` or a filesystem.
 
-Uso:
-    python3 scripts/build_kb.py ruta/al/knowledge_base.xls
+Usage:
+    python3 scripts/build_kb.py path/to/knowledge_base.xls
 """
 import json
 import os
@@ -26,7 +26,7 @@ OUT = os.path.join(
 
 def main():
     if len(sys.argv) < 2:
-        print("uso: python3 scripts/build_kb.py <excel>")
+        print("usage: python3 scripts/build_kb.py <excel>")
         sys.exit(1)
 
     src = sys.argv[1]
@@ -35,7 +35,7 @@ def main():
 
     for required in ("question", "answer"):
         if required not in df.columns:
-            print(f"ERROR: falta la columna '{required}'. Encontradas: {list(df.columns)}")
+            print(f"ERROR: missing column '{required}'. Found: {list(df.columns)}")
             sys.exit(1)
 
     out = []
@@ -54,7 +54,7 @@ def main():
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
 
-    print(f"[build_kb] {len(out)} entradas -> {os.path.relpath(OUT)}")
+    print(f"[build_kb] {len(out)} entries -> {os.path.relpath(OUT)}")
 
 
 if __name__ == "__main__":
