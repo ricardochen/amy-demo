@@ -10,7 +10,7 @@ solo. Basado en el kiosco original (`showroom-kiosk`) del robot CSJBOT.
 
 | Pieza | Dónde | Qué hace |
 |---|---|---|
-| Frontend | GitHub Pages (`public/`) | UI del kiosco, `SpeechRecognition` (STT) y `<audio>` (TTS) |
+| Frontend | GitHub Pages (`docs/`) | UI del kiosco, `SpeechRecognition` (STT) y `<audio>` (TTS) |
 | Backend | Supabase Edge Function `amy-api` (Deno) | `/query` (retrieval + DeepSeek), `/tts` (ElevenLabs), `/health` |
 | Knowledge base | `supabase/functions/amy-api/kb_data.json` | 1.357 Q&A del bufete |
 
