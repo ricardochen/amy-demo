@@ -76,10 +76,23 @@ const langBtn = await page.locator('#langToggle').count();
 check('No language toggle present (English-only)', langBtn === 0, `${langBtn} found`);
 
 const spanishText = await page.evaluate(() => {
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  // Only inspect TEXT NODES THAT RENDER. A TreeWalker over body also walks into
+  // <script> and <style>, which would flag source code the user never sees.
+  const SKIP = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE']);
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      for (let p = node.parentElement; p; p = p.parentElement) {
+        if (SKIP.has(p.tagName)) return NodeFilter.FILTER_REJECT;
+        const cs = getComputedStyle(p);
+        if (cs.display === 'none' || cs.visibility === 'hidden') return NodeFilter.FILTER_REJECT;
+      }
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
   const hits = [];
   while (walker.nextNode()) {
     const t = walker.currentNode.textContent.trim();
+    if (!t) continue;
     if (/[áéíóúñ¿¡]/i.test(t) || /\b(años|Asesoría|Español|Gracias|Bienvenido|Toca para)\b/i.test(t)) {
       hits.push(t.slice(0, 60));
     }
