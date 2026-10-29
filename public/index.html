@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Amy - Kraemer & Kraemer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400&display=swap');
+  :root { 
+    --bg: #0A0A0E; 
+    --surface: #121218; 
+    --text-primary: #FFFFFF; 
+    --text-secondary: rgba(255,255,255,0.45); 
+    --accent: #C9A84C; 
+    --accent-glow: rgba(201,168,76,0.25); 
+    /* Cycle 3: brighter gold for small/secondary text on dark bg (AA) */
+    --accent-bright: #E7CE86;
+    --accent-text: #EFD89A;
+    --cyan: #00E5FF;
+    --cyan-glow: rgba(0,229,255,0.15);
+    --green: #2ECC71; 
+    --red: #E74C3C; 
+    /* --- Design tokens --- */
+    --radius: 14px; 
+    --radius-sm: 10px;
+    --radius-pill: 999px;
+    --transition: 0.4s cubic-bezier(0.4,0,0.2,1); 
+    --ease-out: 0.22s cubic-bezier(0.4,0,0.2,1);
+    /* Spacing scale (4px base) */
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+    /* Touch-friendly control heights (>=48px) */
+    --ctrl-h: 48px;
+    --ctrl-min: 48px;
+    /* Text colors tuned for contrast on dark bg */
+    --text-secondary: rgba(255,255,255,0.62);
+    --text-tertiary: rgba(255,255,255,0.42);
+    --border-1: rgba(255,255,255,0.08);
+    --border-2: rgba(255,255,255,0.14);
+    --surface-2: #16161f;
+    --shadow-card: 0 6px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+    --shadow-float: 0 10px 30px rgba(0,0,0,0.45);
+    /* --- Cycle 2: depth & material --- */
+    --bg-deep: #07070b;
+    --glass-1: linear-gradient(158deg, rgba(255,255,255,0.075), rgba(255,255,255,0.02) 55%, rgba(255,255,255,0.008));
+    --glass-2: linear-gradient(158deg, rgba(255,255,255,0.05), rgba(255,255,255,0.012));
+    --ring-gold: 0 0 0 1px rgba(201,168,76,0.14), 0 0 22px rgba(201,168,76,0.10);
+    --ring-cyan: 0 0 0 1px rgba(0,229,255,0.16), 0 0 22px rgba(0,229,255,0.12);
+    --shadow-card-2: 0 2px 6px rgba(0,0,0,0.30), 0 10px 26px rgba(0,0,0,0.40), 0 26px 54px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.055);
+    --shadow-lift: 0 6px 14px rgba(0,0,0,0.34), 0 18px 40px rgba(0,0,0,0.48), 0 34px 70px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.07);
+    /* Consistent easing vocabulary */
+    --ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+    --ease-out-2: cubic-bezier(0.16,1,0.3,1);
+    --ease-std: cubic-bezier(0.4,0,0.2,1);
+    --t-fast: 0.18s var(--ease-std);
+    --t-med: 0.28s var(--ease-out-2);
+    --t-slow: 0.5s var(--ease-out-2);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  /* Accessible focus ring for keyboard/assistive users (kiosk-safe) */
+  :focus-visible { outline:2px solid var(--cyan); outline-offset:2px; border-radius:8px; }
+  #textInputField:focus { border-color:rgba(0,229,255,0.55) !important; box-shadow:0 0 0 3px rgba(0,229,255,0.12), 0 0 22px rgba(0,229,255,0.16) !important; }
+  #textInputOverlay button:active { transform:scale(0.96); }
+  #textInputOverlay button:hover { filter:brightness(1.06); }
+  button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; touch-action:none; -webkit-overflow-scrolling:touch; }
+  body { font-family:'Inter',sans-serif; background:#08080c; height:100dvh; width:100vw; position:fixed; margin:0; overflow:hidden; }
+  /* Kiosko: lienzo de diseño fijo 460x820 escalado uniformemente para LLENAR la pantalla del robot
+     (evita bandas laterales). El factor lo calcula fitScreen() en JS. */
+  #stage { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; overflow:hidden; background:var(--bg); }
+  .screen { width:460px; height:820px; flex:0 0 auto; background:var(--bg); overflow:hidden; position:relative; box-shadow:none; display:flex; flex-direction:column; border:none; border-radius:0; transform-origin:center center; will-change:transform; }
+  .state { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.5s ease; padding:28px; }
+  .state.active { opacity:1; pointer-events:auto; }
+  #sleep { 
+    background: #08080c;
+    padding: 0;
+    position:absolute;
+    top:0; left:0; right:0; bottom:0;
+    overflow:hidden;
+  }
+  #sleep::before {
+    content:'';
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(0,229,255,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(201,168,76,0.05) 0%, transparent 42%);
+    z-index:0;
+    pointer-events:none;
+    animation:sleepBreathe 9s ease-in-out infinite;
+  }
+  @keyframes sleepBreathe {
+    0%,100%{ opacity:0.75; transform:scale(1); }
+    50%{ opacity:1; transform:scale(1.06); }
+  }
+
+  /* Cycle 6: Panama photo slideshow (background of sleep state) */
+  .sleep-photos {
+    position:absolute; inset:0;
+    overflow:hidden;
+    z-index:0; pointer-events:none;
+  }
+  .sleep-photo {
+    position:absolute; inset:0;
+    background-size:cover;
+    background-position:center;
+    opacity:0;
+    transition:opacity 1.8s ease-in-out;
+    will-change:opacity;
+  }
+  .sleep-photo.active { opacity:1; }
+  /* Dark overlay so logo/CTA stay legible over the photo (keeps premium tone) */
+  .sleep-photo-overlay {
+    position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:
+      linear-gradient(180deg, rgba(8,8,12,0.72) 0%, rgba(8,8,12,0.46) 34%, rgba(8,8,12,0.58) 66%, rgba(8,8,12,0.86) 100%),
+      radial-gradient(ellipse at 50% 46%, rgba(8,8,12,0.05) 0%, rgba(8,8,12,0.42) 78%);
+  }
+
+  /* Cycle 4: living aurora — slow drifting colour fields for dynamism */
+  .sleep-aurora-wrap {
+    position:absolute; inset:0;
+    overflow:hidden;
+    z-index:0; pointer-events:none;
+  }
+  .sleep-aurora {
+    position:absolute; top:-8%; left:-8%; right:-8%; bottom:-8%;
+    z-index:0; pointer-events:none;
+    background:
+      radial-gradient(circle at 28% 30%, rgba(0,229,255,0.16) 0%, transparent 36%),
+      radial-gradient(circle at 74% 42%, rgba(201,168,76,0.15) 0%, transparent 38%),
+      radial-gradient(circle at 50% 78%, rgba(0,150,255,0.11) 0%, transparent 42%);
+    filter:blur(16px);
+    animation:auroraDrift 18s ease-in-out infinite alternate;
+    will-change:transform,opacity;
+  }
+  @keyframes auroraDrift {
+    0%{ transform:translate3d(-3%,-2%,0) scale(1); opacity:0.72; }
+    50%{ transform:translate3d(2%,3%,0) scale(1.08); opacity:1; }
+    100%{ transform:translate3d(4%,-3%,0) scale(1.04); opacity:0.80; }
+  }
+
+  /* Cycle 4: breathing halo behind the invitation */
+  .sleep-halo {
+    position:absolute; top:50%; left:50%;
+    width:360px; height:360px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(0,229,255,0.17) 0%, rgba(201,168,76,0.08) 44%, transparent 70%);
+    filter:blur(7px);
+    z-index:1; pointer-events:none;
+    animation:haloBreathe 6s ease-in-out infinite;
+  }
+  @keyframes haloBreathe {
+    0%,100%{ transform:translate(-50%,-50%) scale(0.92); opacity:0.55; }
+    50%{ transform:translate(-50%,-50%) scale(1.12); opacity:1; }
+  }
+
+/* ====== SLEEP STATE — ATTRACT MODE ====== */
+  .sleep-content {
+    position:relative; z-index:2;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    width:100%; height:100%;
+    padding:40px 28px;
+  }
+
+  /* Cycle 4: value proposition line + tagline on attract */
+  .sleep-eyebrow {
+    position:absolute; top:52px; left:0; right:0;
+    text-align:center; z-index:3;
+    font-size:11px; font-weight:700;
+    color:rgba(238,216,154,0.96);
+    letter-spacing:3.4px; text-transform:uppercase;
+    font-family:'JetBrains Mono',monospace;
+    text-shadow:0 0 16px rgba(201,168,76,0.40), 0 1px 10px rgba(0,0,0,0.65);
+    animation:fadeUp 0.7s var(--ease-out-2) forwards; animation-delay:0.5s; opacity:0;
+  }
+  .sleep-foot {
+    position:absolute; bottom:44px; left:0; right:0;
+    text-align:center; z-index:3;
+    font-size:11.5px; font-weight:600;
+    color:rgba(255,255,255,0.80);
+    letter-spacing:2.2px; text-transform:uppercase;
+    font-family:'JetBrains Mono',monospace;
+    padding-top:10px;
+    text-shadow:0 1px 10px rgba(0,0,0,0.55);
+    animation:fadeUp 0.7s var(--ease-out-2) forwards; animation-delay:2.4s; opacity:0;
+  }
+  .sleep-foot::before {
+    content:'';
+    display:block; width:72px; height:1px; margin:0 auto 11px;
+    background:linear-gradient(90deg,transparent,rgba(201,168,76,0.72),transparent);
+    box-shadow:0 0 10px rgba(201,168,76,0.32);
+  }
+  .sleep-foot .accent { color:var(--accent-text); font-weight:700; text-shadow:0 0 12px rgba(239,216,154,0.35); }
+
+  /* Orbital glow ring */
+  .sleep-ring {
+    position:absolute;
+    top:50%; left:50%;
+    width:300px; height:300px;
+    transform:translate(-50%,-50%);
+    border:1px solid rgba(0,229,255,0.07);
+    border-radius:50%;
+    animation:orbitSpin 25s linear infinite;
+    pointer-events:none;
+  }
+  .sleep-ring::before {
+    content:'';
+    position:absolute;
+    top:-3px; left:50%;
+    width:6px; height:6px;
+    background:rgba(0,229,255,0.55);
+    border-radius:50%;
+    box-shadow:0 0 10px rgba(0,229,255,0.4), 0 0 20px rgba(0,229,255,0.2);
+  }
+  .sleep-ring-2 {
+    width:220px; height:220px;
+    border-color:rgba(201,168,76,0.06);
+    animation-direction:reverse;
+    animation-duration:35s;
+  }
+  .sleep-ring-2::before {
+    background:rgba(201,168,76,0.5);
+    box-shadow:0 0 8px rgba(201,168,76,0.3);
+  }
+
+  /* Main invitation — always visible */
+  .sleep-invite {
+    text-align:center;
+    z-index:3;
+    margin-bottom:20px;
+    height:110px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+  }
+  .sleep-invite-en {
+    font-size:28px;
+    font-weight:700;
+    color:#fff;
+    letter-spacing:3px;
+    line-height:1.3;
+    text-shadow:0 0 30px rgba(0,229,255,0.10), 0 0 60px rgba(0,229,255,0.05), 0 2px 20px rgba(0,0,0,0.5);
+    min-height:38px;
+  }
+  .sleep-invite-en .char {
+    display:inline-block;
+    opacity:0;
+    transform:translateY(8px) scale(0.9);
+    filter:blur(2px);
+    animation:charReveal 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  }
+  @keyframes charReveal {
+    0%{opacity:0;transform:translateY(8px) scale(0.9);filter:blur(2px)}
+    100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+  }
+  .sleep-invite-en.revealed .char {
+    animation:none;
+    opacity:1;
+    transform:none;
+    filter:none;
+  }
+  .sleep-invite-en .space-char {
+    display:inline-block;
+    width:0.3em;
+  }
+  @keyframes invitePulse {
+    0%,100%{opacity:0.85;text-shadow:0 0 20px rgba(0,229,255,0.06)}
+    50%{opacity:1;text-shadow:0 0 50px rgba(0,229,255,0.2), 0 0 100px rgba(0,229,255,0.1), 0 0 150px rgba(201,168,76,0.05)}
+  }
+  .sleep-invite-en.wave .char {
+    animation:none;
+    opacity:1; filter:none;
+    display:inline-block;
+    animation:charWave 2.5s ease-in-out infinite;
+  }
+  @keyframes charWave {
+    0%,100%{transform:translateY(0px)}
+    50%{transform:translateY(-6px)}
+  }
+  .sleep-invite-es {
+    font-size:16px;
+    font-weight:400;
+    color:rgba(255,255,255,0.70);
+    letter-spacing:2px;
+    margin-top:6px;
+    transition:opacity 0.8s ease;
+    opacity:0;
+  }
+  .sleep-invite-es.visible {
+    opacity:1;
+  }
+
+  /* Rotating secondary messages */
+  .sleep-rotator {
+    text-align:center;
+    height:66px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    z-index:3;
+    margin-bottom:22px;
+    width:100%;
+  }
+  .sleep-msg {
+    position:absolute;
+    text-align:center;
+    opacity:0;
+    transition:opacity 0.8s ease;
+    width:100%;
+    pointer-events:none;
+  }
+  .sleep-msg.active {
+    opacity:1;
+  }
+  .sleep-msg-en {
+    font-size:18px;
+    font-weight:500;
+    color:rgba(255,255,255,0.92);
+    letter-spacing:1.5px;
+    text-shadow:0 1px 12px rgba(0,0,0,0.6);
+  }
+  .sleep-msg-es {
+    font-size:13px;
+    font-weight:400;
+    color:rgba(231,206,134,0.82);
+    letter-spacing:1px;
+    margin-top:4px;
+    text-shadow:0 0 12px rgba(201,168,76,0.18);
+  }
+
+  /* Cycle 4: prominent tap CTA under invite */
+  .sleep-tap {
+    z-index:3;
+    font-size:13px; font-weight:700;
+    color:var(--cyan);
+    letter-spacing:3px; text-transform:uppercase;
+    margin-bottom:20px;
+    display:flex; align-items:center; gap:10px;
+    text-shadow:0 0 18px rgba(0,229,255,0.5), 0 1px 8px rgba(0,0,0,0.6);
+    animation:tapPulse 2.4s ease-in-out infinite;
+  }
+  .sleep-tap .tap-arrow {
+    display:inline-block;
+    width:0; height:0;
+    border-left:5px solid transparent;
+    border-right:5px solid transparent;
+    border-top:8px solid var(--cyan);
+    filter:drop-shadow(0 0 6px rgba(0,229,255,0.7));
+    animation:tapBob 1.8s ease-in-out infinite;
+  }
+  @keyframes tapPulse {
+    0%,100%{ opacity:0.72; }
+    50%{ opacity:1; }
+  }
+  @keyframes tapBob {
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(4px); }
+  }
+
+  /* Decorative dots */
+  .sleep-dots {
+    display:flex;
+    gap:8px;
+    z-index:3;
+    margin-bottom:30px;
+  }
+  .sleep-dot {
+    width:4px; height:4px;
+    border-radius:50%;
+    background:rgba(0,229,255,0.2);
+    transition:all 0.5s ease;
+  }
+  .sleep-dot.active {
+    background:var(--cyan);
+    box-shadow:0 0 8px var(--cyan-glow);
+  }
+
+  /* Floating particles */
+  .sleep-particles {
+    position:absolute; inset:0;
+    z-index:1;
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .particle {
+    position:absolute;
+    width:3px; height:3px;
+    border-radius:50%;
+    background:var(--cyan);
+    opacity:0;
+    box-shadow:0 0 6px rgba(0,229,255,0.5);
+    animation:particleFloat 8s linear infinite;
+  }
+  .particle:nth-child(1) { left:15%; top:20%; animation-delay:0s; animation-duration:7s; opacity:0.55; }
+  .particle:nth-child(2) { left:75%; top:30%; animation-delay:1.2s; animation-duration:9s; opacity:0.45; }
+  .particle:nth-child(3) { left:30%; top:70%; animation-delay:2.5s; animation-duration:8s; opacity:0.5; }
+  .particle:nth-child(4) { left:85%; top:60%; animation-delay:0.8s; animation-duration:10s; opacity:0.4; }
+  .particle:nth-child(5) { left:50%; top:15%; animation-delay:3.5s; animation-duration:7.5s; opacity:0.5; }
+  .particle:nth-child(6) { left:10%; top:80%; animation-delay:1.8s; animation-duration:8.5s; opacity:0.45; }
+  .particle:nth-child(7) { left:65%; top:85%; animation-delay:4.2s; animation-duration:9.5s; opacity:0.4; }
+  .particle:nth-child(8) { left:90%; top:40%; animation-delay:3s; animation-duration:7.8s; opacity:0.5; }
+  @keyframes particleFloat {
+    0%{transform:translateY(0) translateX(0); opacity:0;}
+    10%{opacity:1;}
+    90%{opacity:0.55;}
+    100%{transform:translateY(-140px) translateX(26px); opacity:0;}
+  }
+  /* Cycle 4: slow twinkle drift so particles feel alive, not static */
+  .particle:nth-child(odd) { animation-name:particleDrift; }
+  @keyframes particleDrift {
+    0%{ transform:translate3d(0,0,0) scale(0.7); opacity:0; }
+    20%{ opacity:0.9; }
+    60%{ opacity:0.4; transform:translate3d(-12px,-60px,0) scale(1.1); }
+    100%{ transform:translate3d(18px,-130px,0) scale(0.7); opacity:0; }
+  }
+
+  /* Floating amber particles */
+  .particle.amber {
+    background:var(--accent);
+    width:4px; height:4px;
+    box-shadow:0 0 6px rgba(201,168,76,0.5);
+  }
+  .particle:nth-child(9) { left:40%; top:50%; animation-delay:5s; animation-duration:11s; opacity:0.4; }
+  .particle:nth-child(10) { left:20%; top:40%; animation-delay:2s; animation-duration:9s; opacity:0.45; }
+  .particle:nth-child(11) { left:60%; top:25%; animation-delay:6s; animation-duration:8.4s; opacity:0.5; }
+  .particle:nth-child(12) { left:35%; top:62%; animation-delay:3.4s; animation-duration:9.8s; opacity:0.42; }
+
+  /* Wake CTA — premium gold-tinted pill */
+  .wake-btn {
+    z-index:3;
+    position:relative;
+  }
+  .wake-btn button {
+    min-height:var(--ctrl-h);
+    min-width:240px;
+    padding:16px 46px;
+    border-radius:var(--radius-pill);
+    background:linear-gradient(158deg, rgba(0,229,255,0.20), rgba(0,229,255,0.06));
+    border:1.5px solid rgba(0,229,255,0.48);
+    color:#F2FDFF;
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    font-weight:800;
+    cursor:pointer;
+    transition:transform var(--t-med), box-shadow var(--t-med), border-color var(--t-med), background var(--t-med);
+    letter-spacing:3px;
+    text-transform:uppercase;
+    text-shadow:0 0 14px rgba(0,229,255,0.45);
+    box-shadow:0 0 30px rgba(0,229,255,0.16), 0 10px 26px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.14);
+    animation:wakePulse 3.2s ease-in-out infinite;
+    position:relative;
+  }
+  @keyframes wakePulse {
+    0%,100%{ box-shadow:0 0 24px rgba(0,229,255,0.14), 0 10px 26px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.12); }
+    50%{ box-shadow:0 0 48px rgba(0,229,255,0.30), 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.18); }
+  }
+  .wake-btn button:hover {
+    border-color:rgba(0,229,255,0.7);
+    color:#fff;
+    background:linear-gradient(158deg, rgba(0,229,255,0.24), rgba(0,229,255,0.10));
+    transform:translateY(-2px) scale(1.02);
+    box-shadow:0 0 46px rgba(0,229,255,0.34), 0 12px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.16);
+    animation:none;
+  }
+  .wake-btn button:active {
+    transform:translateY(0) scale(0.96);
+    background:rgba(0,229,255,0.28);
+    color:#fff;
+    animation:none;
+  }
+
+/* ====== WAKE STATE — AMY FUTURISTIC ====== */
+  #wake {
+    background: #08080e;
+    padding: 0;
+    position:absolute;
+    top:0; left:0; right:0; bottom:0;
+  }
+
+  /* Deep ambient glow — cyan + amber (multi-layer) */
+  #wake::before {
+    content:'';
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 50% -4%, rgba(0,229,255,0.10) 0%, transparent 46%),
+      radial-gradient(ellipse at 50% 104%, rgba(201,168,76,0.08) 0%, transparent 42%),
+      radial-gradient(ellipse at 12% 52%, rgba(0,229,255,0.045) 0%, transparent 38%),
+      radial-gradient(ellipse at 92% 62%, rgba(201,168,76,0.035) 0%, transparent 36%);
+    z-index:0;
+    pointer-events:none;
+  }
+
+  /* Fine grain / vignette for material depth */
+  #wake::after {
+    content:'';
+    position:absolute; inset:0;
+    background:radial-gradient(ellipse at 50% 44%, transparent 40%, rgba(0,0,0,0.42) 120%);
+    z-index:1;
+    pointer-events:none;
+  }
+
+  /* Orbital ring decoration */
+  .wake-orbital {
+    position:absolute; 
+    top:50%; left:50%;
+    width:400px; height:400px;
+    transform:translate(-50%,-50%);
+    border:1px solid rgba(0,229,255,0.05);
+    border-radius:50%;
+    z-index:0;
+    pointer-events:none;
+    animation:orbitSpin 34s linear infinite;
+    box-shadow:0 0 60px rgba(0,229,255,0.03) inset;
+  }
+  .wake-orbital::after {
+    content:'';
+    position:absolute; top:50%; left:50%;
+    width:290px; height:290px;
+    transform:translate(-50%,-50%);
+    border:1px solid rgba(201,168,76,0.045);
+    border-radius:50%;
+    animation:orbitSpin 46s linear infinite reverse;
+  }
+  .wake-orbital::before {
+    content:'';
+    position:absolute;
+    top:-1px; left:50%;
+    width:6px; height:6px;
+    background:rgba(0,229,255,0.45);
+    border-radius:50%;
+    box-shadow:0 0 14px rgba(0,229,255,0.35), 0 0 30px rgba(0,229,255,0.18);
+  }
+  @keyframes orbitSpin {
+    0%{transform:translate(-50%,-50%) rotate(0deg)}
+    100%{transform:translate(-50%,-50%) rotate(360deg)}
+  }
+
+  /* Top bar with AMY indicator — Cycle 3: unified pill bar, badge + clock grouped */
+  .wake-topbar {
+    position:absolute;
+    top:16px; left:50%;
+    transform:translateX(-50%);
+    display:inline-flex;
+    align-items:center;
+    gap:0;
+    padding:0;
+    z-index:5;
+    opacity:0;
+    animation:fadeUp 0.4s ease forwards;
+    animation-delay:0.6s;
+    border-radius:var(--radius-pill);
+    background:linear-gradient(158deg, rgba(255,255,255,0.055), rgba(255,255,255,0.012));
+    border:1px solid rgba(255,255,255,0.10);
+    box-shadow:0 8px 24px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.05);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    overflow:hidden;
+  }
+  .amy-badge {
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:10px;
+    font-weight:600;
+    color:rgba(0,229,255,0.85);
+    font-family:'JetBrains Mono',monospace;
+    letter-spacing:1.2px;
+    text-transform:uppercase;
+    padding:8px 14px;
+    border-radius:0;
+    background:transparent;
+    border:none;
+    box-shadow:none;
+  }
+  .amy-badge .status-dot {
+    width:5px; height:5px;
+    background:var(--cyan);
+    border-radius:50%;
+    animation:blink 2s ease-in-out infinite;
+    box-shadow:0 0 7px rgba(0,229,255,0.4);
+  }
+  .amy-badge .status-text {
+    font-size:9px;
+    font-weight:400;
+    color:rgba(0,229,255,0.55);
+    letter-spacing:1px;
+  }
+
+  .wake-time {
+    font-size:10.5px;
+    font-weight:400;
+    color:rgba(255,255,255,0.62);
+    font-family:'JetBrains Mono',monospace;
+    letter-spacing:0.6px;
+    padding:8px 16px 8px 14px;
+    border-left:1px solid rgba(255,255,255,0.10);
+  }
+
+  .wake-content {
+    position:relative; z-index:2;
+    display:flex; flex-direction:column;
+    align-items:center; width:100%;
+    flex:1; justify-content:center;
+    padding:78px 24px 132px 24px;
+  }
+
+  /* Cycle 4: persistent brand crest at the very top of wake (fills upper void) */
+  .wake-crest {
+    position:absolute; top:66px; left:50%; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+    z-index:4; pointer-events:none;
+    opacity:0; animation:fadeUp 0.5s var(--ease-out-2) forwards; animation-delay:0.4s;
+  }
+  .wake-crest .crest-mark {
+    font-size:12px; font-weight:700; letter-spacing:3.5px;
+    color:rgba(255,255,255,0.9); text-transform:uppercase;
+    text-shadow:0 0 22px rgba(255,255,255,0.10), 0 1px 10px rgba(0,0,0,0.6);
+  }
+  .wake-crest .crest-mark .accent-char { color:var(--accent-bright); font-weight:800; }
+  .wake-crest .crest-sub {
+    font-size:8.5px; font-weight:700; letter-spacing:3px; text-transform:uppercase;
+    color:rgba(238,216,154,0.92); font-family:'JetBrains Mono',monospace;
+    text-shadow:0 0 12px rgba(201,168,76,0.30), 0 1px 8px rgba(0,0,0,0.6);
+  }
+
+  .brand-lockup { display:flex; flex-direction:column; align-items:center; }
+  .logo-reveal {
+    font-size:26px; font-weight:600;
+    color:#fff;
+    letter-spacing:6.5px;
+    margin-bottom:4px;
+    text-align:center;
+    opacity:0;
+    animation:revealLogo 0.9s var(--ease-out-2) forwards;
+    animation-delay:0.3s;
+    line-height:1.15;
+    text-shadow:0 0 34px rgba(255,255,255,0.09), 0 2px 18px rgba(0,0,0,0.55);
+    white-space:nowrap;
+  }
+  .logo-reveal .accent-char {
+    color:var(--accent);
+    font-weight:700;
+    display:inline-block;
+    text-shadow:0 0 24px rgba(201,168,76,0.45), 0 0 46px rgba(201,168,76,0.20);
+    padding:0 2px;
+  }
+  @keyframes revealLogo { 
+    0%{opacity:0;letter-spacing:18px;filter:blur(5px)} 
+    100%{opacity:1;letter-spacing:6.5px;filter:blur(0)} 
+  }
+
+  .tagline {
+    font-size:11.5px; font-weight:600;
+    color:rgba(247,240,222,0.94);
+    letter-spacing:3.4px;
+    text-transform:uppercase;
+    margin-bottom:18px;
+    opacity:0;
+    animation:fadeUp 0.5s var(--ease-out-2) forwards;
+    animation-delay:0.7s;
+    height:16px;
+    text-shadow:0 1px 11px rgba(0,0,0,0.7), 0 0 18px rgba(231,206,134,0.12);
+  }
+  /* Cycle 3: gold hairline in tagline separator kept subtle */
+  @keyframes fadeUp { 0%{opacity:0;transform:translateY(10px)} 100%{opacity:1;transform:translateY(0)} }
+
+  /* Horizontal scan line — gold + cyan hairline */
+  .scanline {
+    width:0; height:1px;
+    background:linear-gradient(90deg,transparent,rgba(0,229,255,0.55),rgba(201,168,76,0.5),transparent);
+    margin-bottom:16px;
+    opacity:0;
+    animation:expandLine 0.6s var(--ease-out-2) forwards;
+    animation-delay:0.9s;
+    min-height:1px;
+    box-shadow:0 0 10px rgba(0,229,255,0.18);
+  }
+  @keyframes expandLine { 0%{width:0;opacity:0} 100%{width:56px;opacity:0.9} }
+
+  .greeting-wrapper {
+    margin-bottom:20px; text-align:center;
+    min-height:40px; display:flex; align-items:center; justify-content:center; width:100%;
+  }
+  .greeting-text {
+    font-size:14.5px; font-weight:300;
+    color:rgba(255,255,255,0.88);
+    line-height:1.55; max-width:350px; min-height:32px;
+    letter-spacing:0.3px;
+  }
+  .greeting-text .highlight { color:var(--accent-bright); font-weight:600; }
+  .cursor-blink { display:inline-block; width:2px; height:16px; background:var(--accent); margin-left:2px; animation:blink 0.7s step-end infinite; vertical-align:text-bottom; box-shadow:0 0 10px var(--accent-glow); }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .cards-grid { display:flex; flex-direction:column; gap:9px; width:100%; max-width:382px; height:auto; }
+  .cards-row { display:flex; gap:9px; justify-content:center; }
+  .card {
+    flex:1;
+    min-height:104px;
+    background:var(--glass-1);
+    border:1px solid var(--border-1);
+    border-radius:var(--radius);
+    padding:14px 7px 12px 7px;
+    text-align:center;
+    cursor:pointer;
+    transition:transform var(--t-med), border-color var(--t-med), background var(--t-med), box-shadow var(--t-med);
+    opacity:0; transform:translateY(10px) scale(0.94);
+    animation:cardEnter 0.44s var(--ease-out-2) forwards;
+    overflow:hidden;
+    position:relative;
+    box-shadow:var(--shadow-card-2);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+    will-change:transform;
+  }
+  /* Top edge hairline glow */
+  .card::before {
+    content:'';
+    position:absolute; top:0; left:14%; right:14%; height:1px;
+    background:linear-gradient(90deg,transparent,rgba(0,229,255,0.35),transparent);
+    opacity:0; transition:opacity var(--t-med);
+  }
+  .card:hover::before { opacity:1; }
+  .card::after {
+    content:'';
+    position:absolute;
+    bottom:0; left:50%;
+    width:0; height:2px;
+    background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+    transition:width var(--t-med);
+    transform:translateX(-50%);
+    box-shadow:0 0 12px rgba(0,229,255,0.4);
+  }
+  .card:hover::after { width:72%; }
+  .card:hover {
+    border-color:rgba(0,229,255,0.3);
+    background:linear-gradient(158deg, rgba(0,229,255,0.10), rgba(255,255,255,0.02));
+    transform:translateY(-3px) scale(1.025);
+    box-shadow:var(--shadow-lift), 0 0 26px rgba(0,229,255,0.10), var(--ring-cyan);
+  }
+  .card:active { transform:translateY(0) scale(0.955); border-color:rgba(0,229,255,0.5); box-shadow:0 3px 12px rgba(0,0,0,0.5), 0 0 22px rgba(0,229,255,0.16) inset; }
+  .cards-row.top .card:nth-child(1) { animation-delay:1.05s; }
+  .cards-row.top .card:nth-child(2) { animation-delay:1.15s; }
+  .cards-row.top .card:nth-child(3) { animation-delay:1.25s; }
+  .cards-row.bottom .card:nth-child(1) { animation-delay:1.35s; }
+  .cards-row.bottom .card:nth-child(2) { animation-delay:1.45s; }
+  @keyframes cardEnter { 0%{ opacity:0;transform:translateY(10px) scale(0.92)} 100%{ opacity:1;transform:translateY(0) scale(1)} }
+  .card-icon {
+    font-size:22px; margin-bottom:0;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--cyan);
+    width:33px; height:33px;
+    border-radius:10px;
+    background:radial-gradient(circle at 50% 30%, rgba(0,229,255,0.14), rgba(0,229,255,0.02));
+    border:1px solid rgba(0,229,255,0.16);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 0 16px rgba(0,229,255,0.06);
+    transition:transform var(--t-med), box-shadow var(--t-med), border-color var(--t-med);
+  }
+  /* Cycle 5: three-step hierarchy inside each card — title > subtitle > micro-desc */
+  .card-icon svg { width:20px; height:20px; }
+  .card:hover .card-icon {
+    transform:scale(1.06);
+    border-color:rgba(0,229,255,0.35);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), 0 0 22px rgba(0,229,255,0.18);
+  }
+  .card-title {
+    font-size:13.5px; font-weight:800;
+    color:#FFFFFF;
+    margin-bottom:0px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    letter-spacing:0.7px;
+    line-height:1.12;
+    text-transform:uppercase;
+    text-shadow:0 1px 6px rgba(0,0,0,0.8), 0 0 18px rgba(255,255,255,0.10);
+  }
+  .card-sub {
+    font-size:10px; font-weight:700;
+    color:#F5E4AE;
+    opacity:1;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    letter-spacing:1px;
+    line-height:1.15;
+    text-transform:uppercase;
+    text-shadow:0 0 14px rgba(245,228,174,0.45), 0 1px 5px rgba(0,0,0,0.7);
+  }
+  /* Cycle 4/5: micro-description gives each card context (quietest tier) */
+  .card-desc {
+    font-size:8.5px; font-weight:600;
+    color:rgba(255,255,255,0.68);
+    letter-spacing:0.2px; line-height:1.3;
+    margin-top:2px;
+    display:block;
+    max-width:100%;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    text-shadow:0 1px 4px rgba(0,0,0,0.65);
+  }
+
+  .lang-btn {
+    position:absolute; bottom:38px; left:20px;
+    min-height:var(--ctrl-min);
+    min-width:var(--ctrl-min);
+    padding:12px 22px;
+    background:var(--glass-2);
+    border:1px solid var(--border-2);
+    border-radius:var(--radius-pill);
+    color:rgba(255,255,255,0.82);
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all var(--t-med);
+    opacity:0;
+    animation:fadeUp 0.3s ease forwards;
+    animation-delay:1.8s;
+    z-index:10;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    font-family:'JetBrains Mono',monospace;
+    display:inline-flex; align-items:center; justify-content:center;
+    box-shadow:var(--shadow-card);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+  }
+  .lang-btn:hover {
+    border-color:rgba(0,229,255,0.4);
+    color:var(--cyan);
+    background:rgba(0,229,255,0.10);
+    box-shadow:var(--shadow-card), 0 0 20px rgba(0,229,255,0.12);
+  }
+  .lang-btn:active { transform:scale(0.94); background:rgba(0,229,255,0.18); color:#fff; }
+
+  .wake-amy-eyes {
+    position:absolute; top:14px; left:50%;
+    transform:translateX(-50%);
+    display:flex; gap:14px;
+    opacity:0;
+    animation:fadeUp 0.4s ease forwards;
+    animation-delay:0.4s;
+    z-index:5;
+    align-items:center;
+  }
+  .amy-eye {
+    width:5px; height:5px;
+    background:var(--cyan);
+    border-radius:50%;
+    animation:eyePulse 3s ease-in-out infinite;
+    box-shadow:0 0 10px rgba(0,229,255,0.5);
+  }
+  .amy-eye:nth-child(2) {
+    animation-delay:0.5s;
+  }
+  @keyframes eyePulse {
+    0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 10px rgba(0,229,255,0.5)}
+    50%{opacity:0.4;transform:scale(0.7);box-shadow:0 0 4px rgba(0,229,255,0.2)}
+  }
+
+  /* Bottom status bar */
+  .wake-statusbar {
+    position:absolute;
+    bottom:0; left:0; right:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:7px;
+    padding:18px 20px 17px 20px;
+    z-index:5;
+    opacity:0;
+    animation:fadeUp 0.3s ease forwards;
+    animation-delay:2.0s;
+    background:linear-gradient(180deg, transparent, rgba(8,8,14,0.5) 38%, rgba(8,8,14,0.86));
+  }
+  /* Cycle 5: hairline separator so the footer reads as a defined bar */
+  .wake-statusbar::before {
+    content:'';
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:min(300px, 72%); height:1px;
+    background:linear-gradient(90deg, transparent, rgba(201,168,76,0.45), transparent);
+    box-shadow:0 0 12px rgba(201,168,76,0.22);
+  }
+  .wake-statusbar .value-line {
+    font-size:11.5px;
+    font-weight:600;
+    color:rgba(255,255,255,0.88);
+    letter-spacing:0.6px;
+    text-align:center;
+    text-shadow:0 1px 8px rgba(0,0,0,0.6);
+  }
+  .wake-statusbar .value-line .accent { color:var(--accent-text); font-weight:700; text-shadow:0 0 12px rgba(239,216,154,0.32); }
+  .wake-statusbar span {
+    font-size:9.5px;
+    font-weight:500;
+    color:rgba(255,255,255,0.58);
+    font-family:'JetBrains Mono',monospace;
+    letter-spacing:1.4px;
+    text-transform:uppercase;
+    text-shadow:0 1px 6px rgba(0,0,0,0.5);
+  }
+
+/* ====== SPEAKING STATE ====== */
+  #speaking { background:#0D0D0D; padding:0; }
+  #speaking::before {
+    content:'';
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 50% -6%, rgba(0,229,255,0.06) 0%, transparent 42%),
+      radial-gradient(ellipse at 50% 106%, rgba(201,168,76,0.05) 0%, transparent 40%);
+    z-index:0; pointer-events:none;
+  }
+  .speaking-header {
+    width:100%; display:flex; justify-content:space-between; align-items:center;
+    padding:16px 18px 14px 18px; flex-shrink:0;
+    position:relative; z-index:2;
+    border-bottom:1px solid var(--border-1);
+    background:linear-gradient(180deg, rgba(13,13,13,0.9), rgba(13,13,13,0.4));
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+  }
+  .speaking-logo { font-size:14px; font-weight:700; color:var(--accent-bright); letter-spacing:2.4px; text-shadow:0 0 18px rgba(201,168,76,0.35); }
+  .speaking-indicator {
+    display:flex; align-items:center; gap:7px;
+    color:var(--green); font-size:11.5px; font-weight:600;
+    letter-spacing:0.6px; text-transform:uppercase;
+    padding:5px 12px; border-radius:var(--radius-pill);
+    background:rgba(46,204,113,0.08);
+    border:1px solid rgba(46,204,113,0.22);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .speaking-indicator .dot { width:6px; height:6px; background:var(--green); border-radius:50%; animation:pulseGreen 1.6s ease-in-out infinite; box-shadow:0 0 10px rgba(46,204,113,0.6); }
+  @keyframes pulseGreen { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.45;transform:scale(0.75)} }
+  .speaking-body {
+    flex:1; display:flex; flex-direction:column; width:100%;
+    overflow-y:auto; padding:16px 14px 96px 14px; gap:10px;
+    position:relative; z-index:2;
+    scroll-behavior:smooth;
+    -webkit-overflow-scrolling:touch;
+    mask-image:linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+    -webkit-mask-image:linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  }
+  .speaking-body::-webkit-scrollbar { width:5px; }
+  .speaking-body::-webkit-scrollbar-track { background:transparent; }
+  .speaking-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.14); border-radius:3px; }
+  .chat-bubble {
+    position:relative;
+    border-radius:var(--radius);
+    padding:13px 16px;
+    max-width:88%;
+    margin-bottom:0;
+    box-shadow:var(--shadow-card-2);
+    animation:bubbleIn 0.4s var(--ease-out-2) both;
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+  }
+  @keyframes bubbleIn { 0%{opacity:0;transform:translateY(10px) scale(0.98)} 100%{opacity:1;transform:translateY(0) scale(1)} }
+  /* Amy = left aligned, gold accent */
+  .chat-bubble.robot {
+    align-self:flex-start;
+    background:linear-gradient(158deg, rgba(201,168,76,0.16), rgba(24,24,34,0.96) 62%);
+    border:1px solid rgba(201,168,76,0.34);
+    border-left:3px solid var(--accent-bright);
+    border-top-left-radius:5px;
+    box-shadow:var(--shadow-card-2), 0 0 28px rgba(201,168,76,0.10), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  /* Visitor = right aligned, cyan accent */
+  .chat-bubble.visitor {
+    align-self:flex-end;
+    background:linear-gradient(158deg, rgba(0,229,255,0.17), rgba(24,24,34,0.96) 62%);
+    border:1px solid rgba(0,229,255,0.38);
+    border-right:3px solid var(--cyan);
+    border-top-right-radius:5px;
+    box-shadow:var(--shadow-card-2), 0 0 28px rgba(0,229,255,0.12), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .chat-bubble .text { font-size:15.5px; font-weight:400; color:#FFFFFF; line-height:1.62; overflow-wrap:anywhere; word-break:break-word; }
+  .chat-bubble .label {
+    font-size:10px; font-weight:800; color:#F5E4AE;
+    margin-bottom:6px; text-transform:uppercase; letter-spacing:1.6px;
+    text-shadow:0 0 12px rgba(245,228,174,0.45);
+  }
+  .chat-bubble.visitor .label { color:#9DEFFF; text-align:right; text-shadow:0 0 12px rgba(157,239,255,0.45); }
+  .loading-dots { display:flex; gap:6px; align-items:center; padding:4px 0; }
+  .loading-dots span { display:block; width:8px; height:8px; background:var(--accent); border-radius:50%; animation:dotPulse 1.4s ease-in-out infinite; box-shadow:0 0 10px var(--accent-glow); }
+  .loading-dots span:nth-child(2) { animation-delay:0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay:0.4s; }
+  @keyframes dotPulse { 0%,100%{opacity:0.3;transform:scale(0.7)} 50%{opacity:1;transform:scale(1)} }
+  .speaking-footer {
+    width:100%; position:absolute; bottom:0; left:0;
+    display:flex; justify-content:center; gap:12px;
+    padding:14px 0 22px 0; z-index:10;
+    background:linear-gradient(transparent, var(--bg) 42%);
+  }
+  .speaking-footer button {
+    min-height:var(--ctrl-min); min-width:140px;
+    padding:12px 30px; border-radius:var(--radius-pill); border:none;
+    font-family:'Inter',sans-serif; font-size:14px; font-weight:600; cursor:pointer;
+    transition:transform var(--t-med), background var(--t-med), border-color var(--t-med), color var(--t-med), box-shadow var(--t-med);
+    -webkit-tap-highlight-color:transparent; letter-spacing:0.6px;
+  }
+  .speaking-footer button:hover { transform:scale(1.04); }
+  .speaking-footer button:active { transform:scale(0.95); }
+  .btn-out { background:var(--glass-2); border:1px solid var(--border-2) !important; color:var(--text-secondary); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+  .btn-out:hover { border-color:var(--red) !important; color:var(--red); background:rgba(231,76,60,0.12); box-shadow:0 0 22px rgba(231,76,60,0.14); }
+  .btn-out:active { background:rgba(231,76,60,0.22); color:#fff; }
+  #results { padding:24px; background:#0D0D0D; }
+  .results-content { width:100%; flex:1; display:flex; flex-direction:column; justify-content:center; max-width:400px; }
+  .results-card { background:var(--glass-1); border:1px solid rgba(201,168,76,0.24); border-radius:var(--radius); padding:20px; margin-bottom:14px; opacity:0; transform:translateY(24px); animation:cardEnter 0.6s var(--ease-spring) forwards; box-shadow:var(--shadow-card-2); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+  .results-card .icon-big { font-size:30px; margin-bottom:6px; display:block; }
+  .results-card h3 { font-size:18px; font-weight:700; color:var(--accent); margin-bottom:8px; }
+  .results-card .detail { font-size:14px; color:var(--text-secondary); line-height:1.6; margin-bottom:3px; }
+  .results-card .detail strong { color:var(--text-primary); }
+  .results-qr-area { display:flex; align-items:center; gap:14px; opacity:0; transform:translateY(16px); animation:fadeUp 0.6s ease forwards; animation-delay:0.4s; margin-bottom:14px; }
+  .qr-placeholder { width:70px; height:70px; background:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:9px; color:#333; font-weight:600; flex-shrink:0; }
+  .qr-label { font-size:10px; color:var(--text-secondary); line-height:1.4; }
+  .btn-human { padding:12px 24px; min-height:var(--ctrl-min); background:var(--accent); color:#0D0D0D; border:none; border-radius:30px; font-family:'Inter',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:transform var(--t-med), box-shadow var(--t-med); opacity:0; animation:fadeUp 0.6s ease forwards; animation-delay:0.6s; letter-spacing:0.5px; }
+  .btn-human:hover { transform:scale(1.03); box-shadow:0 4px 20px var(--accent-glow); }
+  .btn-human:active { transform:scale(0.97); }
+  #goodbye { background:linear-gradient(180deg,#0D0D0D 0%,#141628 55%,#1A1A2E 100%); text-align:center; padding:32px; }
+  #goodbye::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse at 50% 30%, rgba(201,168,76,0.08) 0%, transparent 55%),
+               radial-gradient(ellipse at 50% 90%, rgba(0,229,255,0.05) 0%, transparent 45%);
+    z-index:0; pointer-events:none;
+  }
+  .goodbye-content { position:relative; z-index:2; opacity:0; transform:translateY(20px); animation:fadeUp 0.8s var(--ease-out-2) forwards; }
+  .goodbye-content h2 { font-size:25px; font-weight:600; color:var(--text-primary); margin-bottom:8px; letter-spacing:0.4px; }
+  .goodbye-content p { font-size:14px; color:var(--text-secondary); margin-bottom:22px; max-width:320px; line-height:1.5; }
+  .goodbye-qr { width:126px; height:126px; background:white; border-radius:14px; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:10px; color:#333; font-weight:600; animation:qrPop 0.8s var(--ease-spring) forwards; animation-delay:0.3s; opacity:0; box-shadow:0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1); }
+  @keyframes qrPop { 0%{opacity:0;transform:scale(0.5) rotate(-10deg)} 100%{opacity:1;transform:scale(1) rotate(0)} }
+  .goodbye-url { font-size:12px; color:var(--accent); letter-spacing:1.6px; font-weight:500; }
+
+/* ====== WAKE BUTTON (SLEEP STATE) ====== */
+
+
+/* ====== MIC BUTTON ====== */
+  .mic-toggle { position:fixed; bottom:118px; left:50%; transform:translateX(-50%); z-index:999; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px; min-width:var(--ctrl-min); min-height:var(--ctrl-min); justify-content:center; transition:transform var(--t-med); }
+  .mic-toggle:active { transform:translateX(-50%) scale(0.92); }
+  .mic-icon-wrap { position:relative; width:32px; height:32px; display:flex; align-items:center; justify-content:center; order:4; border-radius:50%; background:radial-gradient(circle at 50% 35%, rgba(201,168,76,0.14), rgba(201,168,76,0.02)); border:1px solid rgba(201,168,76,0.16); box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 0 18px rgba(201,168,76,0.08); transition:border-color var(--t-med), box-shadow var(--t-med); }
+  .mic-muted .mic-icon-wrap { background:radial-gradient(circle at 50% 35%, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); border-color:rgba(255,255,255,0.08); box-shadow:inset 0 1px 0 rgba(255,255,255,0.04); }
+  .mic-icon-svg { width:20px; height:20px; fill:var(--accent); filter:drop-shadow(0 0 5px var(--accent-glow)); transition:all 0.3s; }
+  .mic-muted .mic-icon-svg { fill:rgba(255,255,255,0.28); filter:none; }
+  .mic-slash { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-45deg); width:26px; height:2px; background:var(--red); border-radius:2px; opacity:0; transition:opacity 0.3s; }
+  .mic-muted .mic-slash { opacity:1; }
+  .mic-waves { display:flex; gap:2px; align-items:center; height:10px; opacity:0; transition:opacity 0.3s; order:3; }
+  .mic-active .mic-waves { opacity:1; }
+  .mic-waves span { display:block; width:3px; background:var(--cyan); border-radius:2px; animation:waveBar 1.2s ease-in-out infinite; }
+  .mic-waves span:nth-child(1) { height:4px; animation-delay:0s; }
+  .mic-waves span:nth-child(2) { height:8px; animation-delay:0.2s; }
+  .mic-waves span:nth-child(3) { height:6px; animation-delay:0.4s; }
+  .mic-waves span:nth-child(4) { height:10px; animation-delay:0.1s; }
+  .mic-waves span:nth-child(5) { height:7px; animation-delay:0.3s; }
+  .mic-label { font-size:9px; font-weight:500; color:rgba(255,255,255,0.34); letter-spacing:1px; text-transform:uppercase; opacity:0; transition:opacity 0.3s; order:5; }
+  .listening-text { font-size:10px; font-weight:400; color:var(--cyan); letter-spacing:2px; opacity:0; transition:opacity 0.3s; order:1; height:14px; }
+  .mic-active .listening-text { opacity:0.7; }
+  .listening-text .dot-anim { animation:dotAnim 1.5s step-end infinite; }
+  @keyframes dotAnim { 0%,20%{opacity:0} 40%{opacity:1} 100%{opacity:1} }
+  .listening-text .dot-anim:nth-child(2) { animation-delay:0.3s; }
+  .listening-text .dot-anim:nth-child(3) { animation-delay:0.6s; }
+  .mic-muted .mic-label { opacity:0.55; color:rgba(231,76,60,0.72); font-size:9px; letter-spacing:1px; }
+  .mic-active .mic-label { opacity:0; }
+  .mic-transcript { display:none; }
+  .trans-final { font-size:15px; font-weight:400; color:var(--text-primary); line-height:1.4; display:inline; }
+  .trans-interim { font-size:15px; font-weight:300; color:var(--text-secondary); opacity:0.7; line-height:1.4; display:inline; }
+  .chat-bubble.interim { opacity:0.7; border-left-color:var(--accent); }
+  .trans-interim-live { font-size:17px; font-weight:300; color:var(--text-secondary); }
+  #transcriptContainer { width:100%; max-width:382px; min-height:52px; max-height:68px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; text-align:center; z-index:5; margin:8px auto 4px auto; padding:9px 12px; border-radius:12px; border:1px solid transparent; transition:border-color 0.3s, background 0.3s; box-sizing:border-box; overflow:hidden; line-height:1.45; font-size:15px; }
+#transcriptContainer.has-text { border-color:rgba(0,229,255,0.18); background:rgba(0,229,255,0.045); box-shadow:0 0 20px rgba(0,229,255,0.06), inset 0 1px 0 rgba(255,255,255,0.04); }
+</style>
+</head>
+<body>
+<div id="stage">
+<div class="screen" id="screen">
+  <div class="state active" id="sleep">
+    <div class="sleep-photos" id="sleepPhotos">
+      <div class="sleep-photo" data-idx="0" style="background-image:url('assets/panama/panama-1-skyline.webp')"></div>
+      <div class="sleep-photo" data-idx="1" style="background-image:url('assets/panama/panama-2-lights.webp')"></div>
+      <div class="sleep-photo" data-idx="2" style="background-image:url('assets/panama/panama-3-casco.webp')"></div>
+    </div>
+    <div class="sleep-photo-overlay"></div>
+    <div class="sleep-aurora-wrap"><div class="sleep-aurora"></div></div>
+    <div class="sleep-particles">
+      <div class="particle"></div><div class="particle"></div>
+      <div class="particle"></div><div class="particle"></div>
+      <div class="particle"></div><div class="particle"></div>
+      <div class="particle"></div><div class="particle"></div>
+      <div class="particle amber"></div><div class="particle amber"></div>
+      <div class="particle"></div><div class="particle amber"></div>
+    </div>
+    <div class="sleep-eyebrow">Kraemer &amp; Kraemer · Panama</div>
+    <div class="sleep-content">
+      <div class="sleep-halo"></div>
+      <div class="sleep-ring"></div>
+      <div class="sleep-ring sleep-ring-2"></div>
+
+      <div class="sleep-invite">
+        <div class="sleep-invite-en" id="sleepReveal"></div>
+        <div class="sleep-invite-es" id="sleepRevealEs">Entra, Hablemos.</div>
+      </div>
+
+      <div class="sleep-rotator" id="sleepRotator">
+        <div class="sleep-msg active" data-idx="0">
+          <div class="sleep-msg-en">Your Legal Ally.</div>
+          <div class="sleep-msg-es">Tu Aliado Legal.</div>
+        </div>
+        <div class="sleep-msg" data-idx="1">
+          <div class="sleep-msg-en">Ask Me About Panama Law.</div>
+          <div class="sleep-msg-es">Pregúntame sobre Derecho Panameño.</div>
+        </div>
+        <div class="sleep-msg" data-idx="2">
+          <div class="sleep-msg-en">Panama Law · Instant Access.</div>
+          <div class="sleep-msg-es">Derecho Panameño · Acceso Instantáneo.</div>
+        </div>
+      </div>
+
+      <div class="sleep-tap">Toca para empezar <span class="tap-arrow"></span></div>
+
+      <div class="sleep-dots" id="sleepDots">
+        <div class="sleep-dot active"></div>
+        <div class="sleep-dot"></div>
+        <div class="sleep-dot"></div>
+      </div>
+
+      <div class="wake-btn"><button onclick="switchState('wake')">LET'S TALK</button></div>
+    </div>
+    <div class="sleep-foot"><span class="accent">18+ años</span> · Asesoría legal en Panamá</div>
+  </div>
+
+  <div class="state" id="wake">
+    <div class="wake-orbital"></div>
+
+    <div class="wake-topbar">
+      <div class="amy-badge">
+        <span class="status-dot"></span>
+        <span>AMY</span>
+        <span class="status-text">· Online</span>
+      </div>
+      <div class="wake-time" id="wakeTime"></div>
+    </div>
+
+    <div class="wake-crest">
+      <div class="crest-mark">Tu Aliado Legal en Panamá</div>
+      <div class="crest-sub">Trusted counsel · 18+ years</div>
+    </div>
+
+    <div class="wake-content">
+      <div class="brand-lockup">
+        <div class="logo-reveal">KRAEMER <span class="accent-char">&amp;</span> KRAEMER</div>
+        <div class="tagline">Legal Intelligence · Since 2008</div>
+        <div class="scanline"></div>
+      </div>
+      <div class="greeting-wrapper"><div class="greeting-text" id="greeting-text"></div></div>
+      <div class="cards-grid">
+        <div class="cards-row top">
+          <div class="card" data-service="corp"><span class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="6" x2="9" y2="6.01"/><line x1="15" y1="6" x2="15" y2="6.01"/><line x1="9" y1="10" x2="9" y2="10.01"/><line x1="15" y1="10" x2="15" y2="10.01"/><line x1="9" y1="14" x2="9" y2="14.01"/><line x1="15" y1="14" x2="15" y2="14.01"/><line x1="9" y1="18" x2="15" y2="18"/></svg></span><div class="card-title">Corporate</div><div class="card-sub">Tax</div><div class="card-desc">Company setup</div></div>
+          <div class="card" data-service="offshore"><span class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span><div class="card-title">Offshore</div><div class="card-sub">Investments</div><div class="card-desc">Global wealth</div></div>
+          <div class="card" data-service="realestate"><span class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><div class="card-title">Real</div><div class="card-sub">Estate</div><div class="card-desc">Buy &amp; sell</div></div>
+        </div>
+        <div class="cards-row bottom">
+          <div class="card" data-service="residency"><span class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><div class="card-title">Residency</div><div class="card-sub">Visas</div><div class="card-desc">Live in Panama</div></div>
+          <div class="card" data-service="crypto"><span class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M8 12h8"/><path d="M12 8v8"/></svg></span><div class="card-title">Crypto</div><div class="card-sub">Blockchain</div><div class="card-desc">Digital assets</div></div>
+        </div>
+      </div>
+      <div id="transcriptContainer"></div>
+    </div>
+
+    <button class="lang-btn" id="langToggle">Español</button>
+    <div class="wake-statusbar">
+      <div class="value-line">Asesoría legal premium en Panamá · <span class="accent">18+ años</span></div>
+      <span>● System ready · Voice activated</span>
+    </div>
+  </div>
+
+  <div class="state" id="speaking">
+    <div class="speaking-header">
+      <div class="speaking-logo">KRAEMER & KRAEMER</div>
+      <div class="speaking-indicator"><span class="dot"></span> Speaking</div>
+    </div>
+    <div class="speaking-body" id="chatMessages"></div>
+    <div class="speaking-footer"><button class="btn-out" onclick="endConversation()">Exit</button></div>
+  </div>
+
+  <div class="state" id="goodbye">
+    <div class="goodbye-content">
+      <h2>Thank you for visiting!</h2>
+      <p>Scan the QR or visit kraemerlaw.com</p>
+      <div class="goodbye-qr">QR</div>
+      <div class="goodbye-url">kraemerlaw.com</div>
+    </div>
+  </div>
+</div>
+
+<div id="micButton" class="mic-muted">
+  <div class="mic-toggle" onclick="toggleMic()">
+    <div class="listening-text">Listening<span class="dot-anim">.</span><span class="dot-anim">.</span><span class="dot-anim">.</span></div>
+    <div class="mic-waves" id="micWaves">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="mic-icon-wrap">
+      <svg class="mic-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="2" width="8" height="13" rx="4" ry="4"/><path d="M4 11v1a8 8 0 0 0 16 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+      <div class="mic-slash"></div>
+    </div>
+    <div class="mic-label" id="micLabel">MUTED</div>
+  </div>
+</div>
+
+<div id="textInputOverlay" style="display:none;position:fixed;bottom:130px;left:50%;transform:translateX(-50%);z-index:99;background:linear-gradient(158deg, rgba(28,28,42,0.94), rgba(16,16,22,0.92));border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:12px 14px;width:422px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 18px 46px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,229,255,0.06), inset 0 1px 0 rgba(255,255,255,0.06);">
+  <div style="display:flex;gap:8px;align-items:center;">
+    <input id="textInputField" type="text" placeholder="Type your question..." onkeydown="handleTextKey(event)" style="flex:1;padding:14px 16px;min-height:48px;border-radius:30px;border:1px solid rgba(201,168,76,0.3);background:rgba(10,10,16,0.85);color:white;font-family:'Inter',sans-serif;font-size:14.5px;outline:none;transition:border-color 0.28s, box-shadow 0.28s;">
+    <button onclick="submitTextQuestion()" style="min-height:48px;padding:12px 26px;border-radius:30px;background:linear-gradient(158deg,#D9BE6B,#C9A84C);color:#0D0D0D;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(201,168,76,0.28), inset 0 1px 0 rgba(255,255,255,0.25);letter-spacing:0.4px;">Send</button>
+  </div>
+</div>
+<script>
+// Backend serverless: Supabase Edge Function (Deno). Este frontend vive en
+// GitHub Pages (estático), así que apunta al edge desplegado.
+window.AMY_BACKEND_URL = "https://xwvaegliifpggqlmxxhu.supabase.co/functions/v1/amy-api";
+const BACKEND_URL = window.AMY_BACKEND_URL || '';
+let currentLang = 'en';
+let textInputVisible = false;
+let conversationHistory = [];
+let currentAudio = null;
+let currentSynth = null;
+let pendingSpeak = false;
+let audioCache = {}; // Cache for greeting audio blobs
+let greetingBlobES = null;
+let greetingBlobEN = null;
+let greetingPreloading = false;
+let preloadReady = false;
+let preloadQueue = [];
+
+function onPreloadReady(cb) {
+  if (preloadReady) { cb(); return; }
+  preloadQueue.push(cb);
+}
+
+function stopAudio() {
+  pendingSpeak = false;
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+  if (currentSynth) {
+    window.speechSynthesis.cancel();
+    currentSynth = null;
+  }
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+function preloadGreetingAudio() {
+  if (greetingPreloading) return;
+  greetingPreloading = true;
+  const texts = [
+    {text: greetingES, lang: 'es', key: 'greeting_es'},
+    {text: greetingEN, lang: 'en', key: 'greeting_en'},
+  ];
+  Promise.all(texts.map(function(item) {
+    return fetch(BACKEND_URL + '/tts', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: item.text, language: item.lang}),
+    })
+    .then(r => { if (!r.ok) throw new Error(); return r.blob(); })
+    .then(blob => {
+      audioCache[item.key] = URL.createObjectURL(blob);
+    })
+    .catch(function(){});
+  })).then(function() {
+    preloadReady = true;
+    var q = preloadQueue;
+    preloadQueue = [];
+    q.forEach(function(cb) { try { cb(); } catch(e) {} });
+  });
+}
+
+function speak(text, lang, onplay, onend) {
+  if (!text || text.length < 5) { if (onplay) onplay(); if (onend) onend(); return; }
+  stopAudio();
+  pendingSpeak = true;
+
+  function handleEnd() {
+    currentAudio = null;
+    if (onend && pendingSpeak) onend();
+  }
+
+  function playUrl(url) {
+    const audio = new Audio(url);
+    currentAudio = audio;
+    audio.onplaying = () => { if (onplay && pendingSpeak) onplay(); };
+    audio.onended = handleEnd;
+    audio.play().catch(() => {
+      currentAudio = null;
+      if (onplay && pendingSpeak) onplay();
+      if (onend && pendingSpeak) onend();
+    });
+  }
+
+  function playFallback() {
+    if (!pendingSpeak) return;
+    if (window.speechSynthesis) {
+      if (onplay) onplay();
+      const u = new SpeechSynthesisUtterance(text);
+      u.onend = handleEnd;
+      currentSynth = u;
+      u.lang = lang === 'es' ? 'es' : 'en-US';
+      u.rate = 1.0;
+      u.pitch = 1.0;
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v =>
+        (lang === 'es' && v.lang.startsWith('es')) ||
+        (lang !== 'es' && v.lang.startsWith('en-US') && v.name.includes('Female'))
+      ) || voices.find(v => v.lang.startsWith(lang === 'es' ? 'es' : 'en'));
+      if (preferred) u.voice = preferred;
+      window.speechSynthesis.speak(u);
+    } else {
+      if (onplay) onplay();
+      if (onend) onend();
+    }
+  }
+
+  // Check cache first (for greeting)
+  const cacheKey = text === greetingES ? 'greeting_es' : text === greetingEN ? 'greeting_en' : null;
+  if (cacheKey && audioCache[cacheKey]) {
+    playUrl(audioCache[cacheKey]);
+    return;
+  }
+
+  // If it's a greeting and we're still preloading, wait for preload
+  if (cacheKey && !preloadReady) {
+    onPreloadReady(function() {
+      if (audioCache[cacheKey]) {
+        playUrl(audioCache[cacheKey]);
+      } else {
+        fetchTTS();
+      }
+    });
+    return;
+  }
+
+  fetchTTS();
+
+  function fetchTTS() {
+    fetch(BACKEND_URL + '/tts', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: text, language: lang}),
+    })
+    .then(r => { if (!r.ok) throw new Error(); return r.blob(); })
+    .then(blob => {
+      if (!pendingSpeak) return;
+      if (cacheKey) audioCache[cacheKey] = URL.createObjectURL(blob);
+      const url = cacheKey ? audioCache[cacheKey] : URL.createObjectURL(blob);
+      playUrl(url);
+    })
+    .catch(playFallback);
+  }
+}
+
+function updateWakeTime() {
+  var el = document.getElementById('wakeTime');
+  if (!el) return;
+  var d = new Date();
+  var h = d.getHours().toString().padStart(2,'0');
+  var m = d.getMinutes().toString().padStart(2,'0');
+  el.textContent = h + ':' + m;
+}
+setInterval(updateWakeTime, 30000);
+updateWakeTime();
+
+// Sleep screen — letter reveal animation
+function buildRevealText(text) {
+  var html = '';
+  for (var i = 0; i < text.length; i++) {
+    var ch = text[i];
+    if (ch === ' ') {
+      html += '<span class="space-char"></span>';
+    } else {
+      html += '<span class="char" style="animation-delay:' + (i * 0.045) + 's">' + ch + '</span>';
+    }
+  }
+  return html;
+}
+
+function playReveal() {
+  var el = document.getElementById('sleepReveal');
+  var esEl = document.getElementById('sleepRevealEs');
+  if (!el) return;
+  el.className = 'sleep-invite-en';
+  el.innerHTML = buildRevealText("Come In, Let's Talk.");
+  esEl.classList.remove('visible');
+
+  var revealTime = "Come In, Let's Talk.".length * 0.045 * 1000 + 600;
+  setTimeout(function() {
+    el.classList.add('revealed');
+    esEl.classList.add('visible');
+    // Wavy dance — staggered sin wave on each char
+    el.classList.add('wave');
+    var chars = el.querySelectorAll('.char');
+    var text = "Come In, Let's Talk.";
+    chars.forEach(function(c, i) {
+      c.style.animationDelay = (i * 0.08) + 's';
+    });
+    setTimeout(function() {
+      el.classList.remove('wave');
+      playReveal();
+    }, 8000);
+  }, revealTime);
+}
+
+playReveal();
+
+// Sleep screen rotating messages
+var sleepMsgIndex = 0;
+var sleepRotateTimer = null;
+function rotateSleepMessages() {
+  var msgs = document.querySelectorAll('#sleepRotator .sleep-msg');
+  var dots = document.querySelectorAll('#sleepDots .sleep-dot');
+  if (!msgs.length) return;
+  msgs[sleepMsgIndex].classList.remove('active');
+  dots[sleepMsgIndex].classList.remove('active');
+  sleepMsgIndex = (sleepMsgIndex + 1) % msgs.length;
+  msgs[sleepMsgIndex].classList.add('active');
+  dots[sleepMsgIndex].classList.add('active');
+}
+function startSleepRotation() {
+  if (sleepRotateTimer) clearInterval(sleepRotateTimer);
+  sleepRotateTimer = setInterval(rotateSleepMessages, 6000);
+}
+startSleepRotation();
+
+// Sleep screen — Panama photo slideshow (crossfade every ~8s)
+var sleepPhotoIdx = 0;
+var sleepPhotoTimer = null;
+function rotateSleepPhotos() {
+  var photos = document.querySelectorAll('#sleepPhotos .sleep-photo');
+  if (photos.length < 2) return;
+  photos[sleepPhotoIdx].classList.remove('active');
+  sleepPhotoIdx = (sleepPhotoIdx + 1) % photos.length;
+  photos[sleepPhotoIdx].classList.add('active');
+}
+function startSleepPhotos() {
+  var photos = document.querySelectorAll('#sleepPhotos .sleep-photo');
+  if (!photos.length) return;
+  photos[0].classList.add('active');
+  if (sleepPhotoTimer) clearInterval(sleepPhotoTimer);
+  sleepPhotoTimer = setInterval(rotateSleepPhotos, 8000);
+}
+startSleepPhotos();
+
+let wakeListenTimer = null;
+let micActive = false;
+let micRecognition = null;
+
+function switchState(id) {
+  cancelTyping();
+  if (wakeListenTimer) { clearTimeout(wakeListenTimer); wakeListenTimer = null; }
+  document.querySelectorAll('.state').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  // Inactivity watchdog: only runs while NOT on the sleep/attract screen.
+  if (typeof idleReset === 'function') { idleReset(id); }
+  document.querySelectorAll('.nav-controls button').forEach(b => b.classList.toggle('active', b.dataset.state === id));
+  const mic = document.getElementById('micButton');
+  if (mic) {
+    mic.style.display = 'block';
+    if (id === 'thinking' || id === 'goodbye') {
+      mic.style.display = 'none';
+    }
+    if (id !== 'wake' && id !== 'speaking' && id !== 'results') {
+      mic.classList.remove('mic-active');
+      mic.classList.add('mic-muted');
+      const label = document.getElementById('micLabel');
+      if (label) label.textContent = 'MUTED';
+    }
+  }
+  const wakeBtn = document.querySelector('.wake-btn');
+  if (wakeBtn) wakeBtn.style.display = (id === 'sleep') ? 'block' : 'none';
+  if (id === 'wake') {
+    var greetingEl = document.getElementById('greeting-text');
+    if (greetingEl && !greetingEl.textContent.trim()) {
+      startTyping(true);
+    }
+  }
+  if (id === 'goodbye') hideTextInput();
+}
+
+const greetingES = 'Hola, soy Amy. Bienvenido a Kraemer & Kraemer. Somos un bufete de abogados en Panama con mas de 18 anos de experiencia. En que puedo ayudarte hoy?';
+const greetingEN = 'Hi, I\'m Amy. Welcome to Kraemer & Kraemer. We are a law firm in Panama with over 18 years of experience. How can I help you today?';
+
+let typingTimer = null;
+let typingCancelled = false;
+
+function cancelTyping() {
+  typingCancelled = true;
+  if (typingTimer) { clearTimeout(typingTimer); typingTimer = null; }
+}
+
+function startTyping(playVoice) {
+  cancelTyping();
+  typingCancelled = false;
+  const el = document.getElementById('greeting-text');
+  el.innerHTML = '';
+  const text = currentLang === 'es' ? greetingES : greetingEN;
+  const chars = text.split(''); let i = 0;
+
+  // Speak the greeting voice and start mic when TTS finishes
+  if (playVoice !== false) {
+    speak(text, currentLang, null, function() {
+      // TTS finished — auto-start mic
+      if (document.getElementById('wake').classList.contains('active') && !micActive) {
+        if ((window.AmyBridge && window.AmyBridge.startListening) ||
+            ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window)) {
+          startListening();
+        }
+      }
+    });
+  }
+
+  function type() {
+    if (typingCancelled) { return; }
+    if (i < chars.length) {
+      el.innerHTML = chars.slice(0,i+1).join('') + '<span class="cursor-blink"></span>';
+      i++;
+      typingTimer = setTimeout(type, chars[i-1] === '.' ? 120 : chars[i-1] === ',' ? 80 : 25);
+    } else {
+      // Cycle 4: typing finished → drop the blinking caret so the greeting
+      // reads as a finished statement (no stray "|" on a static screen).
+      el.innerHTML = text;
+    }
+  }
+  type();
+}
+
+document.getElementById('langToggle').addEventListener('click', () => {
+  currentLang = currentLang === 'es' ? 'en' : 'es';
+  document.getElementById('langToggle').textContent = currentLang === 'es' ? 'English' : 'Espanol';
+  stopAudio();
+  startTyping(true);
+});
+
+document.querySelectorAll('.card').forEach(card => {
+  card.addEventListener('click', () => {
+    const svc = card.dataset.service;
+    const qs = {
+      corp: currentLang === 'es' ? 'Como constituyo una empresa en Panama?' : 'How do I incorporate in Panama?',
+      offshore: currentLang === 'es' ? 'Que servicios offshore ofrecen?' : 'What offshore services do you offer?',
+      realestate: currentLang === 'es' ? 'Como compro propiedades en Panama?' : 'How to buy property in Panama?',
+      residency: currentLang === 'es' ? 'Como obtengo residencia en Panama?' : 'How to get residency in Panama?',
+      crypto: currentLang === 'es' ? 'Que servicios de crypto ofrecen?' : 'What crypto services do you offer?',
+    };
+    askQuestion(qs[svc] || qs.residency);
+  });
+});
+
+function addChatMessage(role, text) {
+  const container = document.getElementById('chatMessages');
+  if (!container) return;
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble ' + (role === 'user' ? 'visitor' : 'robot');
+  const label = document.createElement('div');
+  label.className = 'label';
+  label.textContent = role === 'user' ? (currentLang === 'es' ? 'Tú' : 'You') : 'Amy';
+  const textEl = document.createElement('div');
+  textEl.className = 'text';
+  textEl.textContent = text;
+  bubble.appendChild(label);
+  bubble.appendChild(textEl);
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+}
+
+function getLastRobotTextEl() {
+  const container = document.getElementById('chatMessages');
+  if (!container) return null;
+  const bubbles = container.querySelectorAll('.chat-bubble.robot .text');
+  return bubbles.length > 0 ? bubbles[bubbles.length - 1] : null;
+}
+
+function askQuestion(q) {
+  stopAudio();
+  hideTextInput();
+  addChatMessage('user', q);
+  if (typeof idleTouch === 'function') idleTouch();
+
+  // ── Visitor said goodbye? End gracefully (spoken farewell → sleep screen). ──
+  if (isFarewell(q)) {
+    goodbyeAndReturn();
+    return;
+  }
+
+  switchState('speaking');
+
+  fetch(BACKEND_URL + '/query', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      question: q,
+      language: currentLang,
+      history: conversationHistory,
+    }),
+  })
+  .then(r => r.json())
+  .then(data => {
+    // ── Bot ended with a farewell marker or said goodbye? → say goodbye and return. ──
+    const raw = data.answer || '';
+    if (raw.indexOf('<<BYE>>') !== -1 || isBotFarewell(raw)) {
+      const cleanBye = raw.replace('<<BYE>>', '').trim();
+      data.answer = cleanBye;
+      goodbyeAndReturn(cleanBye);
+      return;
+    }
+
+    conversationHistory.push({role: 'user', content: q});
+    conversationHistory.push({role: 'assistant', content: data.answer});
+    if (conversationHistory.length > 20) {
+      conversationHistory = conversationHistory.slice(-20);
+    }
+    // Real activity: Amy answered → keep the kiosk awake.
+    if (typeof idleTouch === 'function') idleTouch();
+
+    // ── Trigger robot escort when bot directs visitor to kiosk ──
+    if (data.answer && /videollamada|video call|kiosko de atenci[oó]n|service kiosk/i.test(data.answer)) {
+      console.log('[kiosk] Detected kiosk direction in bot response → triggering goToKiosk()');
+      if (window.AmyBridge && window.AmyBridge.goToKiosk) {
+        window.AmyBridge.goToKiosk();
+      }
+    }
+
+    switchState('speaking');
+
+    addChatMessage('assistant', '');
+    const el = getLastRobotTextEl();
+    if (!el) return;
+    el.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+
+    const chars = data.answer.split(''); let i = 0;
+    let responseTypingCancelled = false;
+    let textStarted = false;
+
+    // Start speaking IMMEDIATELY (parallel to typing effect)
+    speak(data.answer, currentLang, null, function() {
+      // TTS ended — auto-start mic for follow-up
+      if (document.getElementById('speaking').classList.contains('active') && !micActive) {
+        setTimeout(function() {
+          if (document.getElementById('speaking').classList.contains('active') && !micActive) {
+            startListening();
+          }
+        }, 500);
+      }
+    });
+
+    // Typing effect runs in parallel
+    function startTypingEffect() {
+      if (textStarted || responseTypingCancelled) return;
+      textStarted = true;
+      el.innerHTML = '';
+      i = 0;
+      function tr() {
+        if (responseTypingCancelled) return;
+        if (i < chars.length) {
+          el.innerHTML = chars.slice(0,i+1).join('') + '<span class="cursor-blink"></span>';
+          i++;
+          if (i % 5 === 0) {
+            const c = document.getElementById('chatMessages');
+            if (c) c.scrollTop = c.scrollHeight;
+          }
+          setTimeout(tr, 15);
+        } else {
+          el.innerHTML = data.answer;
+          const c = document.getElementById('chatMessages');
+          if (c) c.scrollTop = c.scrollHeight;
+        }
+      }
+      tr();
+    }
+
+    const checkCancel = setInterval(function() {
+      var thinkingEl = document.getElementById('thinking');
+      if (thinkingEl && thinkingEl.classList.contains('active')) {
+        responseTypingCancelled = true;
+        clearInterval(checkCancel);
+      }
+    }, 100);
+
+    setTimeout(startTypingEffect, 100);
+  })
+  .catch(() => {
+    addChatMessage('assistant', currentLang === 'es' ? 'Error de conexion.' : 'Connection error.');
+    switchState('speaking');
+  });
+}
+
+function toggleMic() {
+  if (micActive) {
+    stopMic();
+  } else {
+    const wakeState = document.getElementById('wake');
+    if (!wakeState || !wakeState.classList.contains('active')) {
+      const mic = document.getElementById('micButton');
+      if (mic) {
+        if (mic.classList.contains('mic-muted')) {
+          mic.classList.remove('mic-muted');
+          mic.classList.add('mic-active');
+          const label = document.getElementById('micLabel');
+          if (label) label.textContent = '';
+        } else {
+          mic.classList.remove('mic-active');
+          mic.classList.add('mic-muted');
+          const label = document.getElementById('micLabel');
+          if (label) label.textContent = 'MUTED';
+        }
+      }
+      return;
+    }
+    startListening();
+  }
+}
+
+function stopMic() {
+  micActive = false;
+  // Native bridge STT (Android WebView)
+  if (window.AmyBridge && window.AmyBridge.stopListening) {
+    try { window.AmyBridge.stopListening(); } catch(e) {}
+  }
+  if (micRecognition) {
+    try { micRecognition.stop(); } catch(e) {}
+    micRecognition = null;
+  }
+  const mic = document.getElementById('micButton');
+  const label = document.getElementById('micLabel');
+  var tc = document.getElementById('transcriptContainer');
+  tc.innerHTML = '';
+  tc.classList.remove('has-text');
+  const interimBubble = document.querySelector('.chat-bubble.interim');
+  if (interimBubble) interimBubble.remove();
+  if (mic) {
+    mic.classList.remove('mic-active');
+    mic.classList.add('mic-muted');
+  }
+  if (label) label.textContent = 'MUTED';
+}
+
+function startListening() {
+  // ── Native Android bridge first (WebView has no webkitSpeechRecognition) ──
+  if (window.AmyBridge && window.AmyBridge.startListening && window.AmyBridge.isSttAvailable) {
+    var nativeOk = false;
+    try { nativeOk = !!window.AmyBridge.isSttAvailable(); } catch(e) { nativeOk = false; }
+    if (nativeOk) {
+      startNativeStt();
+      return;
+    }
+  }
+  if (('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window)) {
+    startSR();
+  }
+}
+
+// ── Native STT (Android SpeechRecognizer via AmyBridge) ──────────────────
+// The bridge pushes results through these globals. They feed the SAME UX
+// flow as micRecognition.onresult (interim bubble + finalTranscript + ask).
+var __nativeFinalTranscript = '';
+var __nativeSilenceTimer = null;
+var __nativeInterimBubble = null;
+
+function __nativeEnsureInterimBubble() {
+  if (__nativeInterimBubble) return;
+  const container = document.getElementById('chatMessages');
+  const inChat = document.getElementById('speaking').classList.contains('active');
+  if (!inChat || !container) return;
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble visitor interim';
+  const lbl = document.createElement('div');
+  lbl.className = 'label';
+  lbl.textContent = currentLang === 'es' ? 'Tú' : 'You';
+  const textEl = document.createElement('div');
+  textEl.className = 'text trans-interim-live';
+  textEl.textContent = currentLang === 'es' ? 'Escuchando...' : 'Listening...';
+  bubble.appendChild(lbl);
+  bubble.appendChild(textEl);
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+  __nativeInterimBubble = bubble;
+}
+
+function __nativeDisposeInterimBubble() {
+  if (__nativeInterimBubble) {
+    try { __nativeInterimBubble.remove(); } catch(e) {}
+    __nativeInterimBubble = null;
+  }
+}
+
+// NOTE: when a final result arrives, stopMic() → askQuestion() runs and
+// removes the interim bubble via its own path; __amySttOnEnd also cleans up.
+var __nativeFinalHandled = false;
+
+window.__amySttOnResult = function(res) {
+  if (!res) return;
+  var text = (res.text || '').trim();
+  if (!text) return;
+
+  if (res.isFinal) {
+    __nativeFinalTranscript += text + ' ';
+  }
+
+  __nativeEnsureInterimBubble();
+  var tc = document.getElementById('transcriptContainer');
+  if (tc) {
+    tc.classList.add('has-text');
+    if (res.isFinal) {
+      tc.innerHTML = '<span class="trans-final">' + __nativeFinalTranscript + '</span>';
+    } else {
+      tc.innerHTML = '<span class="trans-final">' + __nativeFinalTranscript + '</span><span class="trans-interim">' + text + '</span>';
+    }
+  }
+  if (__nativeInterimBubble) {
+    const textEl = __nativeInterimBubble.querySelector('.text');
+    if (textEl) {
+      const displayText = __nativeFinalTranscript + (res.isFinal ? '' : text);
+      textEl.textContent = displayText || (currentLang === 'es' ? 'Escuchando...' : 'Listening...');
+      const c = document.getElementById('chatMessages');
+      if (c) c.scrollTop = c.scrollHeight;
+    }
+  }
+
+  // Silence heuristic: native partials are frequent; final results arrive
+  // on utterance end. Only arm the auto-submit timer on final results so we
+  // don't cut the visitor off mid-sentence.
+  if (res.isFinal) {
+    if (__nativeSilenceTimer) clearTimeout(__nativeSilenceTimer);
+    __nativeSilenceTimer = setTimeout(function() {
+      var q = __nativeFinalTranscript.trim();
+      if (q) {
+        if (typeof idleTouch === 'function') idleTouch();
+        stopMic();
+        askQuestion(q);
+      }
+    }, 1500);
+  }
+};
+
+window.__amySttOnError = function(err) {
+  console.log('[kiosk] __amySttOnError', err);
+  var code = err && err.code;
+  // ERROR_NO_MATCH (7) / SPEECH_TIMEOUT (6): Android's SpeechRecognizer ends
+  // the session after one utterance / on silence. Android does NOT keep a
+  // continuous session, so we must RE-ARM: start a fresh recognition session
+  // to keep listening. Without this the mic "turns itself off" right after it
+  // becomes ready.
+  if (code === 7 || code === 6) {
+    if (micActive) {
+      window.__nativeReArmCount = (window.__nativeReArmCount || 0) + 1;
+      setTimeout(function() {
+        if (!micActive) return;
+        try { window.AmyBridge.startListening(currentLang === 'es' ? 'es-PA' : 'en-US'); } catch(e) {}
+      }, 300);
+    }
+    return;
+  }
+  // ERROR_CLIENT (5): recognizer raced/aborted. Retry a few times to recover,
+  // then only give up if it keeps failing.
+  if (code === 5) {
+    if (!window.__nativeClientRetried) {
+      window.__nativeClientRetried = true;
+      __nativeFinalTranscript = '';
+      setTimeout(function() {
+        if (!micActive) return;
+        try { window.AmyBridge.startListening(currentLang === 'es' ? 'es-PA' : 'en-US'); } catch(e) {}
+      }, 400);
+      return;
+    }
+  }
+  stopMic();
+  window.__nativeClientRetried = false;
+};
+
+window.__amySttOnEnd = function() {
+  __nativeDisposeInterimBubble();
+};
+
+function startNativeStt() {
+  micActive = true;
+  __nativeFinalTranscript = '';
+  window.__nativeClientRetried = false;
+  window.__nativeReArmCount = 0;
+  if (__nativeSilenceTimer) { clearTimeout(__nativeSilenceTimer); __nativeSilenceTimer = null; }
+  __nativeInterimBubble = null;
+
+  const mic = document.getElementById('micButton');
+  const label = document.getElementById('micLabel');
+  if (mic) {
+    mic.classList.add('mic-active');
+    mic.classList.remove('mic-muted');
+  }
+  if (label) label.textContent = '';
+
+  var tc = document.getElementById('transcriptContainer');
+  if (tc) { tc.innerHTML = ''; tc.classList.add('has-text'); }
+
+  __nativeEnsureInterimBubble();
+
+  try {
+    window.AmyBridge.startListening(currentLang === 'es' ? 'es-PA' : 'en-US');
+  } catch(e) {
+    console.log('[kiosk] startListening bridge failed', e);
+    stopMic();
+  }
+}
+
+function startSR() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    stopMic();
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  micRecognition = new SR();
+  micActive = true;
+  const mic = document.getElementById('micButton');
+  const label = document.getElementById('micLabel');
+  if (mic) {
+    mic.classList.add('mic-active');
+    mic.classList.remove('mic-muted');
+  }
+  if (label) label.textContent = '';
+
+  micRecognition.lang = currentLang === 'es' ? 'es-PA' : 'en-US';
+  micRecognition.continuous = true;
+  micRecognition.interimResults = true;
+
+  var tc = document.getElementById('transcriptContainer');
+  tc.innerHTML = '';
+  tc.classList.add('has-text');
+
+  let interimBubble = null;
+  const container = document.getElementById('chatMessages');
+  const inChat = document.getElementById('speaking').classList.contains('active');
+  if (inChat && container) {
+    interimBubble = document.createElement('div');
+    interimBubble.className = 'chat-bubble visitor interim';
+    const lbl = document.createElement('div');
+    lbl.className = 'label';
+    lbl.textContent = currentLang === 'es' ? 'Tú' : 'You';
+    const textEl = document.createElement('div');
+    textEl.className = 'text trans-interim-live';
+    textEl.textContent = currentLang === 'es' ? 'Escuchando...' : 'Listening...';
+    interimBubble.appendChild(lbl);
+    interimBubble.appendChild(textEl);
+    container.appendChild(interimBubble);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  let finalTranscript = '';
+  let silenceTimer = null;
+
+  micRecognition.onresult = function(e) {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const result = e.results[i];
+      if (result.isFinal) {
+        finalTranscript += result[0].transcript + ' ';
+      } else {
+        interim += result[0].transcript;
+      }
+    }
+    tc.innerHTML = '<span class="trans-final">' + finalTranscript + '</span><span class="trans-interim">' + interim + '</span>';
+    if (interimBubble) {
+      const textEl = interimBubble.querySelector('.text');
+      if (textEl) {
+        const displayText = finalTranscript + interim;
+        textEl.textContent = displayText || (currentLang === 'es' ? 'Escuchando...' : 'Listening...');
+        const c = document.getElementById('chatMessages');
+        if (c) c.scrollTop = c.scrollHeight;
+      }
+    }
+
+    if (silenceTimer) clearTimeout(silenceTimer);
+    silenceTimer = setTimeout(function() {
+      if (finalTranscript.trim()) {
+        if (typeof idleTouch === 'function') idleTouch();
+        stopMic();
+        askQuestion(finalTranscript.trim());
+      }
+    }, 1500);
+  };
+  micRecognition.onerror = function() {
+    stopMic();
+  };
+  micRecognition.start();
+}
+
+function showTextInput() {
+  if (textInputVisible) return;
+  textInputVisible = true;
+  const el = document.getElementById('textInputOverlay');
+  if (el) el.style.display = 'flex';
+  switchState('speaking');
+  var vt = document.getElementById('visitorText');
+  if (vt) vt.textContent = currentLang === 'es' ? 'Escribe tu pregunta:' : 'Type your question:';
+  var vb = document.getElementById('visitorBubble');
+  if (vb) vb.style.display = 'block';
+  const input = document.getElementById('textInputField');
+  if (input) { input.focus(); input.value = ''; }
+}
+
+function hideTextInput() {
+  textInputVisible = false;
+  const el = document.getElementById('textInputOverlay');
+  if (el) el.style.display = 'none';
+}
+
+function submitTextQuestion() {
+  const input = document.getElementById('textInputField');
+  if (!input || !input.value.trim()) return;
+  if (typeof idleTouch === 'function') idleTouch();
+  askQuestion(input.value.trim());
+}
+
+function handleTextKey(e) {
+  if (e.key === 'Enter') submitTextQuestion();
+}
+
+function endConversation() {
+  stopAudio();
+  conversationHistory = [];
+  const container = document.getElementById('chatMessages');
+  if (container) container.innerHTML = '';
+  hideTextInput();
+  switchState('sleep');
+}
+
+// ── Goodbye detection ────────────────────────────────────
+// Farewell phrases (ES/EN) that end the conversation. Kept deliberately broad:
+// a kiosk must never get stuck in a chat when the visitor is done talking.
+const BYE_PATTERNS = /\b(adi[oó]s|hasta (luego|pronto|la vista)|nos vemos|chao|chau|bye|goodbye|good[ -]?bye|see (you|ya)|farewell|take care|that'?s all|that is all|eso es todo|es todo|nada m[aá]s|ya (est[aá]|termin[eé]|acab[eé])|no,? (gracias|thanks)|(thank you|thanks|gracias)([,.!\s]+(bye|goodbye|adi[oó]s|that'?s all|eso es todo))?$)\b/i;
+const BYE_WORD = /\b(bye|goodbye|adi[oó]s|chao|chau|farewell)\b/i;
+const THANKS_ONLY = /^(ok[ay]?[,.!\s]*)?(thank you|thanks|thank u|gracias|muchas gracias|mil gracias)[\s.!]*$/i;
+
+// Spoken farewells (kiosk says one and returns to attract/sleep screen).
+const FAREWELL = {
+  es: '¡Gracias por visitar Kraemer & Kraemer! Ha sido un gusto ayudarle. ¡Que tenga un excelente día!',
+  en: 'Thank you for visiting Kraemer & Kraemer! It was a pleasure to help. Have a wonderful day!'
+};
+
+function isFarewell(text) {
+  if (!text) return false;
+  const t = text.trim();
+  if (!t) return false;
+  return BYE_PATTERNS.test(t) || THANKS_ONLY.test(t) || BYE_WORD.test(t);
+}
+
+// Detect a farewell in the BOT's own answer (LLM ended the conversation).
+function isBotFarewell(text) {
+  if (!text) return false;
+  return /\b(gracias por (su )?visita|ha sido un (gusto|placer)|fue un (gusto|placer)|que tenga un (excelente|buen) d[ií]a|estaremos aqu[ií]|thank you for visiting|have a (wonderful|great|lovely) day|it was a pleasure|pleasure (to help|assisting)|feel free to reach out)\b/i.test(text);
+}
+
+// Speak a farewell, then return to the main (attract/sleep) screen.
+function goodbyeAndReturn(speakText) {
+  stopMic();
+  const bye = speakText || FAREWELL[currentLang] || FAREWELL.en;
+  conversationHistory = [];
+  const container = document.getElementById('chatMessages');
+  if (container) container.innerHTML = '';
+  hideTextInput();
+  // Show the farewell briefly, then go to sleep screen.
+  switchState('speaking');
+  addChatMessage('assistant', bye);
+  const go = function() {
+    setTimeout(function() {
+      switchState('sleep');
+    }, 1200);
+  };
+  stopAudio();
+  pendingSpeak = true;
+  speak(bye, currentLang, null, go);
+  // Safety net: if TTS never fires onend, return anyway.
+  setTimeout(function() {
+    if (!document.getElementById('sleep').classList.contains('active')) {
+      switchState('sleep');
+    }
+  }, 15000);
+}
+
+// ── Inactivity watchdog ──────────────────────────────────
+// If there is no real activity for INACTIVITY_MS, return to the sleep
+// (attract) screen — no TTS, since nobody is there.
+const INACTIVITY_MS = (function() {
+  try {
+    var p = new URLSearchParams(location.search).get('idle');
+    if (p) { var s = parseInt(p, 10); if (s > 0) return s * 1000; }
+  } catch (e) {}
+  return 5 * 60 * 1000; // 5 minutes (default)
+})();
+let idleTimer = null;
+
+function idleClear() {
+  if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+}
+
+// Called on every real interaction (question, tap, mic result, bot answer).
+function idleTouch() {
+  const active = (document.querySelector('.state.active') || {}).id;
+  if (active === 'sleep' || active === 'goodbye') { idleClear(); return; }
+  idleClear();
+  idleTimer = setTimeout(idleExpire, INACTIVITY_MS);
+}
+
+// Called from switchState to (re)arm/clear according to the new screen.
+function idleReset(stateId) {
+  if (stateId === 'sleep' || stateId === 'goodbye') { idleClear(); return; }
+  idleTouch();
+}
+
+function idleExpire() {
+  idleClear();
+  console.log('[idle] inactivity timeout → returning to sleep screen');
+  // Silent reset to the attract screen (no spoken farewell).
+  stopAudio();
+  stopMic();
+  conversationHistory = [];
+  const container = document.getElementById('chatMessages');
+  if (container) container.innerHTML = '';
+  const tc = document.getElementById('transcriptContainer');
+  if (tc) { tc.innerHTML = ''; tc.classList.remove('has-text'); }
+  hideTextInput();
+  switchState('sleep');
+}
+
+// Re-arm the watchdog on common interaction events while active.
+['click', 'touchstart', 'keydown', 'mousemove'].forEach(function(evt) {
+  window.addEventListener(evt, function() {
+    const active = (document.querySelector('.state.active') || {}).id;
+    if (active && active !== 'sleep' && active !== 'goodbye') idleTouch();
+  }, { passive: true });
+});
+
+preloadGreetingAudio();
+
+// ---- Kiosko fit: escala el lienzo de diseño 460x820 para LLENAR la pantalla ----
+// Option B: mantiene el diseno exacto del mockup, sin deformar, sin bandas laterales.
+(function fitScreen(){
+  var stage = document.getElementById('stage');
+  var screen = document.getElementById('screen');
+  var DW = 460, DH = 820;
+  function apply(){
+    if(!stage || !screen) return;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    // ?fit=cover (default) escala para cubrir toda la pantalla (recorta un poco si la
+    // relacion difiere); ?fit=contain encaja sin recortar (puede dejar bandas minimas).
+    var mode = (new URLSearchParams(location.search).get('fit') || 'cover');
+    var s = (mode === 'contain')
+      ? Math.min(vw / DW, vh / DH)
+      : Math.max(vw / DW, vh / DH);
+    screen.style.transform = 'scale(' + s + ')';
+    document.documentElement.style.setProperty('--fit-scale', s);
+  }
+  apply();
+  window.addEventListener('resize', apply);
+  window.addEventListener('orientationchange', apply);
+  // Algunos WebViews reportan dimensiones tarde:
+  setTimeout(apply, 300); setTimeout(apply, 1200);
+})();
+</script>
+</div>
+</body>
+</html>
